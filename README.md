@@ -1,5 +1,5 @@
 # Thinkfan-control-gui
-Minimal Gui to monitor CPU temp and fan RPM and, to control fan speed.
+Minimal Gui to monitor CPU temp and fan RPM and, to control fan speed on thinkpad devices for Linux (Ubuntu)
  - Parses `sensors` command to show CPU temp and fan RPM
  - Modifies `/proc/acpi/ibm/fan` to change fan speed
 
