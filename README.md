@@ -25,5 +25,5 @@ Notes - You are required to have the Linux kernel with 'thinkpad-acpi' patch. Yo
 
 
 ## Usage
-`sudo python3 fan.py`
-(sudo is needed to modify speed)
+`python3 fan.py`
+(you might need to use it with sudo to modify speed)
