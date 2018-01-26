@@ -6,8 +6,8 @@ It is written for Linux only. For windows, see http://www.almico.com/speedfan.ph
 Written in Python, using Tkinter   
 
 ## How it Works?
- - Parses `sensors` command to show CPU temp and fan RPM
- - Modifies `/proc/acpi/ibm/fan` to change fan speed
+ + Parses `sensors` command to show CPU temp and fan RPM
+ + Modifies `/proc/acpi/ibm/fan` to change fan speed
 
 ## Dependencies
 `sudo apt install lm-sensors thinkfan python3.6 python3-tk`
@@ -15,7 +15,7 @@ Written in Python, using Tkinter
 ## Setup
 + `sudo nano /etc/modprobe.d/thinkpad_acpi.conf` -> add line `options thinkpad_acpi fan_control=1`
  
-+ `sudo nano /etc/default/thinkfan` -> add line `START=yes` (to start thinkfan on startup)
++ `sudo nano /etc/default/thinkfan` -> add line `START=yes` ( to start thinkfan on startup )
 
 + Reboot. 
 
@@ -26,4 +26,4 @@ Notes - You are required to have the Linux kernel with 'thinkpad-acpi' patch. Yo
 
 ## Usage
 `python3 fan.py`
-(you might need to use it with sudo to modify speed)
+( you might need to use it with sudo to modify speed )
