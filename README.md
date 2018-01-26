@@ -13,9 +13,9 @@ Written in Python, using Tkinter
 `sudo apt install lm-sensors thinkfan python3.6 python3-tk`
 
 ## Setup
-+ `sudo nano /etc/modprobe.d/thinkpad_acpi.conf` -> add line `options thinkpad_acpi fan_control=1`
++ `sudo nano /etc/modprobe.d/thinkpad_acpi.conf` -> add line `options thinkpad_acpi fan_control=1` ( enables fan control )
  
-+ `sudo nano /etc/default/thinkfan` -> add line `START=yes` ( to start thinkfan on startup )
++ `sudo nano /etc/default/thinkfan` -> add line `START=yes` ( starts thinkfan on startup )
 
 + Reboot. 
 
