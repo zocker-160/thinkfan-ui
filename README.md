@@ -1,7 +1,5 @@
 # Thinkpad Fan Control GUI
 
-I would gladly accept a pull request using python format syntax in place :)
-
 ![Screenshot](https://i.imgur.com/UXII1Mg.png)
 
 This is program for controlling fan speed on IBM/Lenovo ThinkPads  
