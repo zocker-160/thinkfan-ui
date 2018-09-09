@@ -2,7 +2,7 @@
 
 I would gladly accept a pull request using python format syntax in place :)
 
-https://i.imgur.com/UXII1Mg.png
+![Screenshot](https://i.imgur.com/UXII1Mg.png)
 
 This is program for controlling fan speed on IBM/Lenovo ThinkPads  
 It can also monitor CPU temp and fan RPM   
