@@ -12,7 +12,7 @@ Written in Python, using Tkinter
  + Modifies `/proc/acpi/ibm/fan` to change fan speed
 
 ## Dependencies
-`sudo apt install lm-sensors thinkfan python3.6 python3-tk`
+`sudo apt install lm-sensors thinkfan python3 python3-tk`
 
 ## Setup
 + `sudo nano /etc/modprobe.d/thinkpad_acpi.conf` -> add line `options thinkpad_acpi fan_control=1` ( enables fan control )
