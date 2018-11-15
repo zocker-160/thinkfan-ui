@@ -13,7 +13,7 @@ def get_info():
     count = 0
     for i in info_lines:
         if 'Core' in i:
-            result.append(f'Core {count}: ' + i.split(':')[-1].split('(')[0].strip())
+            result.append('Core %d: ' % count + i.split(':')[-1].split('(')[0].strip())
             count += 1
         
         if 'fan' in i:
