@@ -12,20 +12,17 @@ Written in Python, using Tkinter
  + Modifies `/proc/acpi/ibm/fan` to change fan speed
 
 ## Dependencies
-`sudo apt install lm-sensors thinkfan python3 python3-tk`
+`sudo apt install lm-sensors python3 python3-tk`
 
 ## Setup
-+ `sudo nano /etc/modprobe.d/thinkpad_acpi.conf` -> add line `options thinkpad_acpi fan_control=1` ( enables fan control )
- 
-+ `sudo nano /etc/default/thinkfan` -> add line `START=yes` ( starts thinkfan on startup )
-
++ Open this file, using command -- `sudo nano /etc/modprobe.d/thinkpad_acpi.conf` 
++ Add line `options thinkpad_acpi fan_control=1`
 + Reboot. 
++ `python3 fan.py`
 
-Now you'll be able to use this program easily.
+( Add `sudo` to modify speed )
 
-Notes - You are required to have the Linux kernel with 'thinkpad-acpi' patch. You must also enable manual control for your fans. For Linux 2.6.22 and above, you must add 'fan_control=1' as a module parameter to 'thinkpad-acpi'. For example, in Debian Lenny (and Ubuntu 8.04), you must add the following to "/etc/modprobe.d/options": options thinkpad_acpi fan_control=1 In Ubuntu 9.10 you need to add this line to file "/etc/modprobe.d/alsa-base.conf"
+---
 
+Note: You are required to have the Linux kernel with `thinkpad-acpi` patch.
 
-## Usage
-`python3 fan.py`
-( you might need to use it with sudo to modify speed )
