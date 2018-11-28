@@ -2,10 +2,11 @@
 
 ![Screenshot](https://i.imgur.com/UXII1Mg.png)
 
-This is program for controlling fan speed on IBM/Lenovo ThinkPads  
-It can also monitor CPU temp and fan RPM   
+This is an application for controlling fan speed on IBM/Lenovo ThinkPads.
+
+It can also monitor CPU temp and fan RPM.
+
 It is written for Linux only. For windows, see http://www.almico.com/speedfan.php   
-Written in Python, using Tkinter   
 
 ## How it Works?
  + Parses `sensors` command to show CPU temp and fan RPM
@@ -24,5 +25,4 @@ Written in Python, using Tkinter
 
 ---
 
-Note: You are required to have the Linux kernel with `thinkpad-acpi` patch.
-
+Note: You are required to have the Linux kernel with `thinkpad-acpi` patch. (Ubuntu, Solus and a few others already seem to have this)
