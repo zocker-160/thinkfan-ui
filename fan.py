@@ -28,9 +28,8 @@ def set_speed(speed=None):
     print("set level to %r" % speed)
     return subprocess.check_output(
         'echo level {0} | sudo tee "/proc/acpi/ibm/fan"'.format(speed),
-        shell=True,
-        encoding="utf-8",
-    )
+        shell=True
+    ).decode()
 
 
 class MainApplication(tk.Frame):
