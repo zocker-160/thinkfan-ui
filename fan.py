@@ -68,5 +68,6 @@ class MainApplication(tk.Frame):
 
 if __name__ == "__main__":
     root = tk.Tk()
+    root.title("Thinkfan Control")
     MainApplication(root).grid()
     root.mainloop()
