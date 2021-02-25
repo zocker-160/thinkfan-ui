@@ -3,6 +3,7 @@
 import sys
 import subprocess
 import json
+import re
 
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent
@@ -25,7 +26,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # timer
         self.updateTimer = QTimer(self)
-        self.updateTimer.timeout.connect(self.getTempInfo_alt)
+        self.updateTimer.timeout.connect(self.getTempInfo)
         self.updateTimer.timeout.connect(self.getFanInfo)
         self.updateTimer.start(1000)
 
@@ -37,7 +38,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         msg.setDefaultButton(QMessageBox.Close)
         msg.exec_()
 
-    def getTempInfo(self):
+    def getTempInfo_old(self):
         """ Reads output of the "sensors" command """
 
         proc = subprocess.Popen(["sensors", "-j"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -64,7 +65,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.label_temp.setText(result)
 
-    def getTempInfo_alt(self):
+    def getTempInfo(self):
         """ Reads output of the "sensors" command """
 
         proc = subprocess.Popen(["sensors"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -75,9 +76,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not sErr:
             data = sOut.decode().split("\n")
             result = ""
+            tempRE = re.compile(r"^.+\Stemp")
 
             for i, line in enumerate(data):
-                if "temp" in line:
+                if tempRE.match(line):
                     i += 1
                     while data[i] != "":
                         if not "pci" in data[i].lower():
@@ -91,6 +93,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             result = sErr.decode()
 
         self.label_temp.setText(result)
+        print(result)
 
     def getFanInfo(self):
         """ Parses the first 3 lines of output from /proc/acpi/ibm/fan """
