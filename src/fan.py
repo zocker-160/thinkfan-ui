@@ -93,7 +93,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             result = sErr.decode()
 
         self.label_temp.setText(result)
-        print(result)
+        #print(result)
 
     def getFanInfo(self):
         """ Parses the first 3 lines of output from /proc/acpi/ibm/fan """
