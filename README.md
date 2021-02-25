@@ -1,6 +1,6 @@
 # Thinkfan UI
 
-![Screenshot](https://i.imgur.com/UXII1Mg.png)
+![Screenshot](images/Screenshot_20210225_191953.png)
 
 This is a complete rewrite of [scientifichackers/thinkfan-control-gui](https://github.com/scientifichackers/thinkfan-control-gui) using PyQt5.
 
