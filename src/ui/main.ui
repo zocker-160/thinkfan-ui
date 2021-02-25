@@ -39,10 +39,7 @@
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;CPU temp info:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
-        </property>
-        <property name="margin">
-         <number>10</number>
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -91,10 +88,7 @@
          <string>FAN info:</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
-        </property>
-        <property name="margin">
-         <number>10</number>
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>
