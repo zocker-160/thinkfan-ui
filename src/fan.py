@@ -53,7 +53,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for key, value in data.items():
                 if "temp" in key:
                     for k, v in value.items():
-                        if k == "Adapter" or "PCI" in v:
+                        if not "°C" in v:
                             continue
 
                         result += f"{k}:"
