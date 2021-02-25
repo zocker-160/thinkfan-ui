@@ -172,10 +172,13 @@
        </font>
       </property>
       <property name="text">
-       <string>ThinkFan UI by zocker_160</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;ThinkFan UI by zocker_160 | &lt;a href=&quot;https://github.com/zocker-160/thinkfan-ui&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;https://github.com/zocker-160/thinkfan-ui&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+      <property name="textInteractionFlags">
+       <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse</set>
       </property>
      </widget>
     </item>
