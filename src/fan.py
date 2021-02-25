@@ -29,6 +29,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.updateTimer.timeout.connect(self.getFanInfo)
         self.updateTimer.start(1000)
 
+    def showErrorMSG(self, msg_str: str, title_msg="ERROR"):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText(msg_str)
+        msg.setWindowTitle(title_msg)
+        msg.setDefaultButton(QMessageBox.Close)
+        msg.exec_()
+
     def getTempInfo(self):
         """ Reads output of the "sensors" command """
 
@@ -112,8 +120,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         print("set speed:", speed)
 
-        with open("/proc/acpi/ibm/fan", "w+") as soc:
-            soc.write(f"level {speed}")
+        try:
+            with open("/proc/acpi/ibm/fan", "w+") as soc:
+                soc.write(f"level {speed}")
+        except PermissionError:
+            self.showErrorMSG("Missing permissions! Please run as root.")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
