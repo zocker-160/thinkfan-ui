@@ -110,11 +110,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         possible values: 0-7, auto, disengaged, full-speed
         """
 
-        print(speed)
-        return
+        print("set speed:", speed)
 
         subprocess.run(["echo", str(speed), ">", "/proc/acpi/ibm/fan"])
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
