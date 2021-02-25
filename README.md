@@ -2,7 +2,7 @@
 
 ![Screenshot](https://i.imgur.com/UXII1Mg.png)
 
-This is a complete rewrite of <Link> using PyQt5
+This is a complete rewrite of [scientifichackers/thinkfan-control-gui](https://github.com/scientifichackers/thinkfan-control-gui) using PyQt5.
 
 
 
@@ -26,9 +26,7 @@ It is written for **Linux only**. For Windows, see http://www.almico.com/speedfa
 + Open this file, using command -- `sudo nano /etc/modprobe.d/thinkpad_acpi.conf` 
 + Add line `options thinkpad_acpi fan_control=1`
 + Reboot
-+ `python3 fan.py` or download and run appimage from releases
-
-(add `sudo` to modify speed)
++ `python3 fan.py` (add `sudo` to modify speed)
 
 ---
 
