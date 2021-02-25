@@ -1,0 +1,125 @@
+#! /usr/bin/env python3
+
+import sys
+import subprocess
+import json
+
+from PyQt5.QtCore import QTimer
+from PyQt5.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent
+from PyQt5.QtWidgets import QApplication, QDialog, QFileDialog, QGraphicsScene, QListWidget, QMainWindow, QMessageBox
+
+from ui.gui import Ui_MainWindow
+
+
+class MainWindow(QMainWindow, Ui_MainWindow):
+
+    def __init__(self):
+        super().__init__()
+
+        self.setupUi(self)
+
+        # buttons
+        self.button_set.clicked.connect(lambda: self.setFanSpeed(self.slider.value()))
+        self.button_auto.clicked.connect(lambda: self.setFanSpeed("auto"))
+        self.button_full.clicked.connect(lambda: self.setFanSpeed("full-speed"))
+
+        # timer
+        self.updateTimer = QTimer(self)
+        self.updateTimer.timeout.connect(self.getTempInfo_alt)
+        self.updateTimer.timeout.connect(self.getFanInfo)
+        self.updateTimer.start(1000)
+
+    def getTempInfo(self):
+        """ Reads output of the "sensors" command """
+
+        proc = subprocess.Popen(["sensors", "-j"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        sOut, sErr = proc.communicate()
+
+        #print(sOut, sErr)
+
+        if not sErr:
+            data: dict = json.loads(sOut)
+
+            result = ""
+
+            for key, value in data.items():
+                if "temp" in key:
+                    for k, v in value.items():
+                        if k == "Adapter" or "PCI" in v:
+                            continue
+
+                        result += f"{k}:"
+                        for name, data in v.items():
+                            result += f"\t {name}: {data} \n"
+        else:
+            result = sErr.decode()
+
+        self.label_temp.setText(result)
+
+    def getTempInfo_alt(self):
+        """ Reads output of the "sensors" command """
+
+        proc = subprocess.Popen(["sensors"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        sOut, sErr = proc.communicate()
+
+        #print(sOut, sErr)
+
+        if not sErr:
+            data = sOut.decode().split("\n")
+            result = ""
+
+            for i, line in enumerate(data):
+                if "temp" in line:
+                    i += 1
+                    while data[i] != "":
+                        if not "pci" in data[i].lower():
+                            result += data[i]
+                            result += "\n"
+
+                        i += 1
+                    else:
+                        break
+        else:
+            result = sErr.decode()
+
+        self.label_temp.setText(result)
+
+    def getFanInfo(self):
+        """ Parses the first 3 lines of output from /proc/acpi/ibm/fan """
+
+        proc = subprocess.Popen(["cat", "/proc/acpi/ibm/fan"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        sOut, sErr = proc.communicate()
+
+        if not sErr:
+            result = ""
+
+            output = sOut.decode().split("\n")
+            for i, line in enumerate(output):
+                if i == 3: break
+
+                result += line
+                result += "\n"
+        else:
+            result = sErr.decode()
+
+        self.label_fan.setText(result)
+
+    def setFanSpeed(self, speed="auto"):
+        """
+        Set speed of fan by changing level at /proc/acpi/ibm/fan
+        possible values: 0-7, auto, disengaged, full-speed
+        """
+
+        print(speed)
+        return
+
+        subprocess.run(["echo", str(speed), ">", "/proc/acpi/ibm/fan"])
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+
+    mainWindow = MainWindow()
+    mainWindow.show()
+
+    sys.exit(app.exec_())
