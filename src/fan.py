@@ -112,7 +112,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         print("set speed:", speed)
 
-        subprocess.run(["echo", str(speed), ">", "/proc/acpi/ibm/fan"])
+        subprocess.run(["echo", f"level {speed}", ">", "/proc/acpi/ibm/fan"])
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
