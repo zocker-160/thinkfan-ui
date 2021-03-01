@@ -27,8 +27,6 @@ It is written for **Linux only**. For Windows, see http://www.almico.com/speedfa
 + clone this repository and navigate to the `src` folder
 + `python3 fan.py` (add `sudo` to modify speed)
 
-
-
 ---
 
 Note: You are required to have the Linux kernel with `thinkpad-acpi` patch. (Ubuntu, Solus and a few others already seem to have this)
