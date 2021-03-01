@@ -4,8 +4,6 @@
 
 This is a complete rewrite of [scientifichackers/thinkfan-control-gui](https://github.com/scientifichackers/thinkfan-control-gui) using PyQt5.
 
-
-
 This is an application for controlling fan speed on IBM/Lenovo ThinkPads.
 
 It can also monitor CPU temp and fan RPM.
@@ -26,7 +24,10 @@ It is written for **Linux only**. For Windows, see http://www.almico.com/speedfa
 + Open this file, using command -- `sudo nano /etc/modprobe.d/thinkpad_acpi.conf` 
 + Add line `options thinkpad_acpi fan_control=1`
 + Reboot
++ clone this repository and navigate to the `src` folder
 + `python3 fan.py` (add `sudo` to modify speed)
+
+
 
 ---
 
