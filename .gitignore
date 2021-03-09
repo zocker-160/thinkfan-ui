@@ -1,3 +1,6 @@
 .directory
+*.AppImage
 
 *__pycache__
+AppDir
+appimage-builder-cache

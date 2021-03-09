@@ -1,0 +1,69 @@
+version: 1
+script:
+  # Remove any previous build
+  - rm -rf AppDir | true
+  # Make usr and icons dirs
+  - mkdir -p AppDir/usr/src/thinkfan
+  # Copy the python application code into the AppDir
+  - cp src/fan.py AppDir/usr/src/thinkfan
+  - cp src/ui AppDir/usr/src/thinkfan -r
+
+AppDir:
+  path: ./AppDir
+
+  app_info:
+    id: org.zocker_160.thinkfan-ui
+    name: thinkfan-ui
+    icon: utilities-terminal
+    version: 0.7.0
+    exec: usr/bin/python3
+    # Set the application main script path as argument. Use '$@' to forward CLI parameters
+    exec_args: "$APPDIR/usr/src/thinkfan/fan.py $@"
+
+  apt:
+    arch: amd64
+    sources:
+      - sourceline: 'deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ focal main restricted universe multiverse'
+        key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3b4fe6acc0b21f32'
+
+    include:
+      - python3
+      - python3-pyqt5
+    exclude: []
+
+  runtime:
+    env:
+      PATH: '${APPDIR}/usr/local/bin:${PATH}'
+      # Set python home
+      # See https://docs.python.org/3/using/cmdline.html#envvar-PYTHONHOME
+      PYTHONHOME: '${APPDIR}/usr'
+      # Path to the site-packages dir or other modules dirs
+      # See https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH
+      PYTHONPATH: '${APPDIR}/usr/lib/python3.8/site-packages'
+
+  test:
+    #fedora:
+    #  image: appimagecrafters/tests-env:fedora-30
+    #  command: ./AppRun
+    #  use_host_x: true
+    debian:
+      image: appimagecrafters/tests-env:debian-stable
+      command: ./AppRun
+      use_host_x: true
+    arch:
+      image: appimagecrafters/tests-env:archlinux-latest
+      command: ./AppRun
+      use_host_x: true
+    #centos:
+    #  image: appimagecrafters/tests-env:centos-7
+    #  command: ./AppRun
+    #  use_host_x: true
+    ubuntu:
+      image: appimagecrafters/tests-env:ubuntu-xenial
+      command: ./AppRun
+      use_host_x: true
+
+AppImage:
+  update-information: None
+  sign-key: None
+  arch: x86_64
