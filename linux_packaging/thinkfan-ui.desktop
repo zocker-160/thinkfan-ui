@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=thinkfan-ui
-Exec=usr/bin/python3
+Exec=thinkfan-ui
 Icon=thinkfan-ui
 Type=Application
 Terminal=false
