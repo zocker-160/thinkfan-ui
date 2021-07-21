@@ -13,6 +13,8 @@ from ui.gui import Ui_MainWindow
 
 VERSION = "v0.7"
 
+PROC_FAN = "/proc/acpi/ibm/fan"
+
 class MainWindow(QMainWindow, Ui_MainWindow):
 
     def __init__(self):
@@ -31,6 +33,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.updateTimer.timeout.connect(self.getTempInfo)
         self.updateTimer.timeout.connect(self.getFanInfo)
         self.updateTimer.start(1000)
+        self.updateTimer.timeout.emit()
 
     def showErrorMSG(self, msg_str: str, title_msg="ERROR"):
         msg = QMessageBox()
@@ -100,7 +103,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def getFanInfo(self):
         """ Parses the first 3 lines of output from /proc/acpi/ibm/fan """
 
-        proc = subprocess.Popen(["cat", "/proc/acpi/ibm/fan"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(["cat", PROC_FAN], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         sOut, sErr = proc.communicate()
 
         if not sErr:
@@ -126,12 +129,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print("set speed:", speed)
 
         try:
-            with open("/proc/acpi/ibm/fan", "w+") as soc:
+            with open(PROC_FAN, "w+") as soc:
                 soc.write(f"level {speed}")
         except PermissionError:
             self.showErrorMSG("Missing permissions! Please run as root.")
-        except FileNotFoundError as e:
-            self.showErrorMSG(e.args[1])
+        except FileNotFoundError:
+            self.showErrorMSG(f"{PROC_FAN} does not exist!")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
