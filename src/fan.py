@@ -130,6 +130,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 soc.write(f"level {speed}")
         except PermissionError:
             self.showErrorMSG("Missing permissions! Please run as root.")
+        except FileNotFoundError as e:
+            self.showErrorMSG(e.args[1])
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
