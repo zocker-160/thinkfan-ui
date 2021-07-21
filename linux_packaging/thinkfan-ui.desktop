@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=thinkfan-ui
+Exec=usr/bin/python3
+Icon=thinkfan-ui
+Type=Application
+Terminal=false
+StartupNotify=true
+Categories=Utility;
+X-KDE-SubstituteUID=true
+X-KDE-Username=root

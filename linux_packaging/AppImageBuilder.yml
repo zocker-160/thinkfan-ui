@@ -6,7 +6,7 @@ script:
   - mkdir -p AppDir/usr/src/thinkfan
   # Copy the python application code into the AppDir
   - cp src/fan.py AppDir/usr/src/thinkfan
-  - cp src/ui AppDir/usr/src/thinkfan -r
+  - cp -r src/ui AppDir/usr/src/thinkfan
 
 AppDir:
   path: ./AppDir
