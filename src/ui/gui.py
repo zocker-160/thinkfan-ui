@@ -14,6 +14,10 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(543, 334)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/icons/linux_packaging/thinkfan-ui.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        MainWindow.setWindowIcon(icon)
+        MainWindow.setIconSize(QtCore.QSize(32, 32))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
@@ -124,3 +128,4 @@ class Ui_MainWindow(object):
         self.button_auto.setText(_translate("MainWindow", "auto (recommended)"))
         self.button_full.setText(_translate("MainWindow", "FULL THROTTLE"))
         self.label_3.setText(_translate("MainWindow", "<html><head/><body><p>ThinkFan UI by zocker_160 | <a href=\"https://github.com/zocker-160/thinkfan-ui\"><span style=\" text-decoration: underline; color:#2980b9;\">https://github.com/zocker-160/thinkfan-ui</span></a><span style=\" color:#000000;\"> | $$$</span></p></body></html>"))
+import ui.qt_ressources_rc
