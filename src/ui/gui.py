@@ -123,4 +123,4 @@ class Ui_MainWindow(object):
         self.button_set.setText(_translate("MainWindow", "set"))
         self.button_auto.setText(_translate("MainWindow", "auto (recommended)"))
         self.button_full.setText(_translate("MainWindow", "FULL THROTTLE"))
-        self.label_3.setText(_translate("MainWindow", "<html><head/><body><p>ThinkFan UI by zocker_160 | <a href=\"https://github.com/zocker-160/thinkfan-ui\"><span style=\" text-decoration: underline; color:#2980b9;\">https://github.com/zocker-160/thinkfan-ui</span></a></p></body></html>"))
+        self.label_3.setText(_translate("MainWindow", "<html><head/><body><p>ThinkFan UI by zocker_160 | <a href=\"https://github.com/zocker-160/thinkfan-ui\"><span style=\" text-decoration: underline; color:#2980b9;\">https://github.com/zocker-160/thinkfan-ui</span></a><span style=\" color:#000000;\"> | $$$</span></p></body></html>"))

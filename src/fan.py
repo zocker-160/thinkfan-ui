@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import QApplication, QDialog, QFileDialog, QGraphicsScene, 
 
 from ui.gui import Ui_MainWindow
 
+VERSION = "v0.7"
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
@@ -18,6 +19,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super().__init__()
 
         self.setupUi(self)
+        self.label_3.setText(self.label_3.text().replace("$$$", VERSION))
 
         # buttons
         self.button_set.clicked.connect(lambda: self.setFanSpeed(self.slider.value()))
@@ -131,6 +133,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setApplicationVersion(VERSION)
 
     mainWindow = MainWindow()
     mainWindow.show()
