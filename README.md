@@ -1,6 +1,6 @@
-# Thinkfan UI
+# ![](images/thinkfan-icon.png) Thinkfan UI
 
-![Screenshot](images/Screenshot_20210225_191953.png)
+![Screenshot](images/Screenshot_20210721_213215.png)
 
 This is a complete rewrite of [scientifichackers/thinkfan-control-gui](https://github.com/scientifichackers/thinkfan-control-gui) using PyQt5.
 
@@ -19,7 +19,13 @@ It is written for **Linux only**. For Windows, see http://www.almico.com/speedfa
 
 `sudo apt install lm-sensors python3 python3-pyqt5`
 
-## Setup
+## Install
+
+### Arch / Manjaro
+
+Package is available in the AUR: [thinkfan-ui](https://aur.archlinux.org/packages/thinkfan-ui/)
+
+### Debian / Ubuntu
 
 + Open this file, using command -- `sudo nano /etc/modprobe.d/thinkpad_acpi.conf` 
 + Add line `options thinkpad_acpi fan_control=1`
