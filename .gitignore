@@ -1,6 +1,12 @@
 .directory
 *.AppImage
-
 *__pycache__
+
+*.deb
+*.gz
+
 AppDir
 appimage-builder-cache
+
+linux_packaging/src/*
+linux_packaging/pkg/*
