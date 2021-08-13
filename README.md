@@ -27,11 +27,16 @@ Package is available in the AUR: [thinkfan-ui](https://aur.archlinux.org/package
 
 ### Debian / Ubuntu
 
-+ Open this file, using command -- `sudo nano /etc/modprobe.d/thinkpad_acpi.conf` 
-+ Add line `options thinkpad_acpi fan_control=1`
-+ Reboot
-+ clone this repository and navigate to the `src` folder
-+ `python3 fan.py` (add `sudo` to modify speed)
+- Download `.deb` from [release page](https://github.com/zocker-160/thinkfan-ui/releases)
+- Install using package manager of your choice or in terminal with `gdebi <packagename>.deb`
+
+### Manual
+
+- Open this file, using command -- `sudo nano /etc/modprobe.d/thinkpad_acpi.conf` 
+- Add line `options thinkpad_acpi fan_control=1`
+- Reboot
+- clone this repository and navigate to the `src` folder
+- `python3 fan.py` (add `sudo` to modify speed)
 
 ---
 
