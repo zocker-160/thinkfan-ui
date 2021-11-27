@@ -11,14 +11,15 @@ from PyQt5.QtWidgets import QApplication, QDialog, QFileDialog, QGraphicsScene, 
 
 from ui.gui import Ui_MainWindow
 
-VERSION = "v0.7"
+VERSION = "v0.8"
 
 PROC_FAN = "/proc/acpi/ibm/fan"
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
-    def __init__(self):
+    def __init__(self, app: QApplication):
         super().__init__()
+        self.app = app
 
         self.setupUi(self)
         self.label_3.setText(self.label_3.text().replace("$$$", VERSION))
@@ -136,11 +137,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except FileNotFoundError:
             self.showErrorMSG(f"{PROC_FAN} does not exist!")
 
+    def center(self):
+        qr = self.frameGeometry()
+        qr.moveCenter(
+            self.app.primaryScreen().availableGeometry().center())
+        self.move(qr.topLeft())
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setApplicationVersion(VERSION)
 
-    mainWindow = MainWindow()
+    mainWindow = MainWindow(app)
+    mainWindow.center()
     mainWindow.show()
 
     sys.exit(app.exec_())
