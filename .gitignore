@@ -8,5 +8,5 @@
 AppDir
 appimage-builder-cache
 
-linux_packaging/src/*
-linux_packaging/pkg/*
+linux_packaging/AUR*
+linux_packaging/MPR*
