@@ -4,6 +4,7 @@ import sys
 import subprocess
 import json
 import re
+import os
 
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent
@@ -11,15 +12,16 @@ from PyQt5.QtWidgets import QApplication, QDialog, QFileDialog, QGraphicsScene, 
 
 from ui.gui import Ui_MainWindow
 
-VERSION = "v0.8"
+VERSION = "v0.9"
 
 PROC_FAN = "/proc/acpi/ibm/fan"
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
-    def __init__(self, app: QApplication):
+    def __init__(self, app: QApplication, flatpak: bool=False):
         super().__init__()
         self.app = app
+        self.flatpak = flatpak
 
         self.setupUi(self)
         self.label_3.setText(self.label_3.text().replace("$$$", VERSION))
@@ -74,7 +76,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def getTempInfo(self):
         """ Reads output of the "sensors" command """
 
-        proc = subprocess.Popen(["sensors"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if self.flatpak:
+            command = ["flatpak-spawn", "--host", "sensors"]
+        else:
+            command = ["sensors"]
+        proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         sOut, sErr = proc.communicate()
 
         #print(sOut, sErr)
@@ -143,11 +149,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.app.primaryScreen().availableGeometry().center())
         self.move(qr.topLeft())
 
+
+def checkFlatpak():
+    return "FLATPAK_ID" in os.environ
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setApplicationVersion(VERSION)
 
-    mainWindow = MainWindow(app)
+    mainWindow = MainWindow(app, checkFlatpak())
     mainWindow.center()
     mainWindow.show()
 
