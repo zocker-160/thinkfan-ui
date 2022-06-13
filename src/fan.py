@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import QApplication, QDialog, QFileDialog, QGraphicsScene, 
 
 from ui.gui import Ui_MainWindow
 
-VERSION = "v0.8"
+VERSION = "v0.8.1"
 
 PROC_FAN = "/proc/acpi/ibm/fan"
 
