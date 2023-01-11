@@ -8,17 +8,50 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QSystemTrayIcon, QMenu
 
+class Ui_SysTrayIndicator(object):
+    def setupSysTrayIndicator(self):
+        self.icon = QSystemTrayIcon(QtGui.QIcon(":/icons/linux_packaging/thinkfan-ui.svg"), self)
+        self.menu = QMenu()
+        self.updateSysTrayIndicatorMenu()
+        self.icon.show()
+        self.icon.setContextMenu(self.menu)
+
+    def updateSysTrayIndicatorMenu(self):
+        for action in self.menu.actions():
+            self.menu.removeAction(action)
+        self.menu.addAction("Fan Full", lambda: self.setFanSpeed("full-speed"))
+        self.menu.addAction("Fan 7", lambda: self.setFanSpeed("7"))
+        self.menu.addAction("Fan 6", lambda: self.setFanSpeed("6"))
+        self.menu.addAction("Fan 5", lambda: self.setFanSpeed("5"))
+        self.menu.addAction("Fan 4", lambda: self.setFanSpeed("4"))
+        self.menu.addAction("Fan 3", lambda: self.setFanSpeed("3"))
+        self.menu.addAction("Fan 2", lambda: self.setFanSpeed("2"))
+        self.menu.addAction("Fan 1", lambda: self.setFanSpeed("1"))
+        self.menu.addAction("Fan Off", lambda: self.setFanSpeed("0"))
+        self.menu.addAction("Fan Auto", lambda: self.setFanSpeed("auto"))
+
+        tempInfo = self.getTempInfo()
+        tempCount = 0
+        for line in tempInfo.split("\n"):
+            if not line or not line.strip():
+                continue
+            self.menu.addAction(line, self.mainWindow.appear)
+            tempCount += 1
+        if tempCount == 0:
+            self.menu.addAction("ThinkFan UI", self.mainWindow.appear)
+        self.menu.addAction("Quit", self.quit)
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(543, 334)
+    def setupUi(self):
+        self.setObjectName("MainWindow")
+        self.resize(543, 334)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/icons/linux_packaging/thinkfan-ui.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        MainWindow.setWindowIcon(icon)
-        MainWindow.setIconSize(QtCore.QSize(32, 32))
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.setWindowIcon(icon)
+        self.setIconSize(QtCore.QSize(32, 32))
+        self.centralwidget = QtWidgets.QWidget(self)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
         self.verticalLayout.setObjectName("verticalLayout")
@@ -106,19 +139,19 @@ class Ui_MainWindow(object):
         self.label_3.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByKeyboard|QtCore.Qt.LinksAccessibleByMouse)
         self.label_3.setObjectName("label_3")
         self.verticalLayout.addWidget(self.label_3)
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(self)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 543, 34))
         self.menubar.setObjectName("menubar")
-        MainWindow.setMenuBar(self.menubar)
+        self.setMenuBar(self.menubar)
 
-        self.retranslateUi(MainWindow)
+        self.retranslateUi()
         self.slider.valueChanged['int'].connect(self.slider_value.setNum)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(self)
 
-    def retranslateUi(self, MainWindow):
+    def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "ThinkFan UI"))
+        self.setWindowTitle(_translate("MainWindow", "ThinkFan UI"))
         self.label.setText(_translate("MainWindow", "<html><head/><body><p>CPU temp info:</p></body></html>"))
         self.label_temp.setText(_translate("MainWindow", "missing data"))
         self.label_2.setText(_translate("MainWindow", "FAN info:"))
