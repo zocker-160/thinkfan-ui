@@ -8,23 +8,18 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QSystemTrayIcon, QMenu
+from PyQt5.QtWidgets import QSystemTrayIcon, QMenu, QAction
 
 class Ui_SysTrayIndicator(object):
     def setupSysTrayIndicator(self):
         self.icon = QSystemTrayIcon(QtGui.QIcon(":/icons/linux_packaging/thinkfan-ui.svg"), self)
         self.menu = QMenu()
+        self.buildSysTrayIndicatorMenu()
         self.updateSysTrayIndicatorMenu()
         self.icon.show()
         self.icon.setContextMenu(self.menu)
 
-    def updateSysTrayIndicatorMenu(self):
-        fan_info = self.getFanInfo()
-        if not fan_info or not fan_info.strip():
-            return
-
-        for action in self.menu.actions():
-            self.menu.removeAction(action)
+    def buildSysTrayIndicatorMenu(self):
         self.menu.addAction("Fan Full", lambda: self.setFanSpeed("full-speed"))
         self.menu.addAction("Fan 7", lambda: self.setFanSpeed("7"))
         self.menu.addAction("Fan 6", lambda: self.setFanSpeed("6"))
@@ -35,19 +30,36 @@ class Ui_SysTrayIndicator(object):
         self.menu.addAction("Fan 1", lambda: self.setFanSpeed("1"))
         self.menu.addAction("Fan Off", lambda: self.setFanSpeed("0"))
         self.menu.addAction("Fan Auto", lambda: self.setFanSpeed("auto"))
-
         self.menu.addSeparator()
+
+    def updateSysTrayIndicatorMenu(self):
+        fan_info = self.getFanInfo()
+        if not fan_info or not fan_info.strip():
+            return
+
+        for action in self.menu.actions():
+            if ":" in action.text() or "Quit" in action.text() or "ThinkFan UI" in action.text():
+                self.menu.removeAction(action)
 
         tempInfo = self.getTempInfo()
         tempCount = 0
         for line in tempInfo.split("\n"):
             if not line or not line.strip():
                 continue
-            self.menu.addAction(line, self.mainWindow.appear)
+            temp_reading = line.replace(" ", "").replace(":", ":  ")
+            self.menu.addAction(temp_reading, self.mainWindow.appear)
             tempCount += 1
 
-        fan_level = fan_info.split("level:")[-1].strip()
-        self.menu.addAction(f"Fan Level: {fan_level}", self.mainWindow.appear)
+        for line in fan_info.split("\n"):
+            if "level:" in line:
+                fan_level = line.split("level:")[-1].strip()
+            if "speed:" in line:
+                fan_speed = line.split("speed:")[-1].strip()
+        if fan_speed:
+            self.menu.addAction(f"Fan RPM: {fan_speed}", self.mainWindow.appear)
+        if fan_level:
+            self.menu.addAction(f"Fan Level: {fan_level}", self.mainWindow.appear)
+
 
         if tempCount == 0:
             self.menu.addAction("ThinkFan UI", self.mainWindow.appear)
