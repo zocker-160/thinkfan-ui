@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-import os
 import sys
 import subprocess
 import json
@@ -12,16 +11,17 @@ from PyQt5.QtWidgets import QApplication, QDialog, QFileDialog, QGraphicsScene, 
 from ui.gui import Ui_MainWindow
 from ui.systray import QApp_SysTrayIndicator
 
-VERSION = "v0.8.1"
+
+VERSION = "v0.8.2"
 
 PROC_FAN = "/proc/acpi/ibm/fan"
 
+
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, app: QApplication):
-        super().__init__()
+        super(QMainWindow, self).__init__()
         self.app = app
         self.setupUi(self)
-
         self.label_3.setText(self.label_3.text().replace("$$$", VERSION))
 
         # buttons
@@ -30,8 +30,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.button_full.clicked.connect(lambda: app.setFanSpeed("full-speed"))
 
     def closeEvent(self, event):
-        event.ignore()
-        self.hide()
+        if self.app.use_indicator:
+            event.ignore()
+            self.hide()
 
     def showErrorMSG(self, msg_str: str, title_msg="ERROR"):
         self.appear()
@@ -51,31 +52,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def center(self):
         qr = self.frameGeometry()
         qr.moveCenter(
-            self.app.primaryScreen().availableGeometry().center())
+            self.app
+            .primaryScreen()
+            .availableGeometry()
+            .center())
         self.move(qr.topLeft())
 
 
 class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
     def __init__(self, argv):
-        super().__init__(argv)
+        super(QApplication, self).__init__(argv)
         self.setApplicationVersion(VERSION)
 
         self.mainWindow = MainWindow(self)
-        self.setupSysTrayIndicator()
+
+        self.use_indicator = "--no-indicator" not in argv
+        self.launched = "--launch" in argv # Use indicator and launch main window
+
+        if self.use_indicator:
+            self.setupSysTrayIndicator()
 
         self.updateTimer = QTimer(self)
         self.updateTimer.timeout.connect(self.updateUI)
         self.updateTimer.start(1000)
         self.updateTimer.timeout.emit()
 
-        # self.mainWindow.appear()
+        if self.launched or not self.use_indicator:
+            self.mainWindow.appear()
 
     def updateUI(self):
         temp_info = self.getTempInfo()
         fan_info = self.getFanInfo()
-        self.mainWindow.label_temp.setText(temp_info)
-        self.mainWindow.label_fan.setText(fan_info)
-        self.updateSysTrayIndicatorMenu()
+        if self.mainWindow.isActiveWindow():
+            self.mainWindow.label_temp.setText(temp_info)
+            self.mainWindow.label_fan.setText(fan_info)
+        if self.use_indicator and self.menu_visible:
+            self.updateIndicatorMenu(temp_info, fan_info)
 
     def getTempInfo_json(self):
         """ Reads output of the "sensors" command """
@@ -119,7 +131,6 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
 
             for i, line in enumerate(lines):
                 line = line.strip()
-                # print(line)
                 if tempRE.match(line):
                     # if "CPU" in line:
                     #     result = line
@@ -172,6 +183,7 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
             # os.execvpe(f"pkexec", [os.path.realpath(__file__)] + sys.argv, os.environ)
         except FileNotFoundError:
             self.mainWindow.showErrorMSG(f"{PROC_FAN} does not exist!")
+
 
 if __name__ == "__main__":
     app = ThinkFanUI(sys.argv)

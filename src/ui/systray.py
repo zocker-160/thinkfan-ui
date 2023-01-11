@@ -1,16 +1,27 @@
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QSystemTrayIcon, QMenu
 
+
 class QApp_SysTrayIndicator(object):
     def setupSysTrayIndicator(self):
         self.icon = QSystemTrayIcon(QtGui.QIcon(":/icons/linux_packaging/thinkfan-ui.svg"), self)
-        self.menu = QMenu()
-        self.buildSysTrayIndicatorMenu()
-        self.updateSysTrayIndicatorMenu()
-        self.icon.show()
-        self.icon.setContextMenu(self.menu)
 
-    def buildSysTrayIndicatorMenu(self):
+        self.menu = QMenu()
+        self.menu_visible = None
+        self.menu.aboutToShow.connect(lambda: self.set_menu_visible(True))
+        self.menu.aboutToHide.connect(lambda: self.set_menu_visible(False))
+
+        self.buildIndicatorMenu()
+        temp_info, fan_info = self.getTempInfo(), self.getFanInfo()
+        self.last_update_info = (None, None) # temp_info, fan_info
+        self.updateIndicatorMenu(temp_info, fan_info)
+        self.icon.setContextMenu(self.menu)
+        self.icon.show()
+
+    def set_menu_visible(self, value):
+        self.menu_visible = value
+
+    def buildIndicatorMenu(self):
         self.fanSpeedMenu = QMenu(title="Fan Level:")
         self.fanSpeedMenu.addAction("Fan Auto", lambda: self.setFanSpeed("auto"))
         self.fanSpeedMenu.addAction("Fan Full", lambda: self.setFanSpeed("full-speed"))
@@ -38,17 +49,23 @@ class QApp_SysTrayIndicator(object):
         self.menu.addAction(f"Fan RPM: ", self.mainWindow.appear)
         self.menu.addAction("Quit", self.quit)
 
-    def updateSysTrayIndicatorMenu(self):
-        fan_info = self.getFanInfo()
-        if not fan_info or not fan_info.strip():
+    def updateIndicatorMenu(self, temp_info, fan_info):
+        temp_info = temp_info.strip()
+        fan_info = fan_info.strip()
+        if not temp_info or not fan_info:
             return
+
+        if (temp_info == self.last_update_info[0]
+            and fan_info == self.last_update_info[1]):
+            return
+
+        self.last_update_info = temp_info, fan_info
 
         actions = {action.text().split(":")[0]: action
                     for action in self.menu.actions()
                     if ":" in action.text()}
 
-        tempInfo = self.getTempInfo()
-        for line in tempInfo.split("\n"):
+        for line in temp_info.split("\n"):
             if not line or not line.strip():
                 continue
             temp_reading = line.replace(" ", "")
