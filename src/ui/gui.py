@@ -8,82 +8,17 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QSystemTrayIcon, QMenu, QAction
 
-class Ui_SysTrayIndicator(object):
-    def setupSysTrayIndicator(self):
-        self.icon = QSystemTrayIcon(QtGui.QIcon(":/icons/linux_packaging/thinkfan-ui.svg"), self)
-        self.menu = QMenu()
-        self.buildSysTrayIndicatorMenu()
-        self.updateSysTrayIndicatorMenu()
-        self.icon.show()
-        self.icon.setContextMenu(self.menu)
-
-    def buildSysTrayIndicatorMenu(self):
-        self.fanSpeedMenu = QMenu(title="Fan Level:")
-        self.fanSpeedMenu.addAction("Fan Auto", lambda: self.setFanSpeed("auto"))
-        self.fanSpeedMenu.addAction("Fan Full", lambda: self.setFanSpeed("full-speed"))
-        self.fanSpeedMenu.addAction("Fan 7", lambda: self.setFanSpeed("7"))
-        self.fanSpeedMenu.addAction("Fan 6", lambda: self.setFanSpeed("6"))
-        self.fanSpeedMenu.addAction("Fan 5", lambda: self.setFanSpeed("5"))
-        self.fanSpeedMenu.addAction("Fan 4", lambda: self.setFanSpeed("4"))
-        self.fanSpeedMenu.addAction("Fan 3", lambda: self.setFanSpeed("3"))
-        self.fanSpeedMenu.addAction("Fan 2", lambda: self.setFanSpeed("2"))
-        self.fanSpeedMenu.addAction("Fan 1", lambda: self.setFanSpeed("1"))
-        self.fanSpeedMenu.addAction("Fan Off", lambda: self.setFanSpeed("0"))
-
-        self.menu.addMenu(self.fanSpeedMenu)
-        self.menu.addAction("Set Fan Auto", lambda: self.setFanSpeed("auto"))
-
-        self.menu.addSeparator()
-
-        tempInfo = self.getTempInfo()
-        for line in tempInfo.split("\n"):
-            if not line or not line.strip():
-                continue
-            temp_reading = line.replace(" ", "").replace(":", ":  ")
-            self.menu.addAction(temp_reading, self.mainWindow.appear)
-
-        self.menu.addAction(f"Fan RPM: ", self.mainWindow.appear)
-        self.menu.addAction("Quit", self.quit)
-
-    def updateSysTrayIndicatorMenu(self):
-        fan_info = self.getFanInfo()
-        if not fan_info or not fan_info.strip():
-            return
-
-        actions = {action.text().split(":")[0]: action
-                    for action in self.menu.actions()
-                    if ":" in action.text()}
-
-        tempInfo = self.getTempInfo()
-        for line in tempInfo.split("\n"):
-            if not line or not line.strip():
-                continue
-            temp_reading = line.replace(" ", "")
-            reading_name, reading_value = temp_reading.split(":")
-            if reading_name in actions:
-                actions[reading_name].setText(f"{reading_name}: {reading_value}")
-
-        for line in fan_info.split("\n"):
-            if "level:" in line:
-                fan_level = line.split("level:")[-1].strip()
-            if "speed:" in line:
-                fan_speed = line.split("speed:")[-1].strip()
-        if fan_speed and "Fan RPM" in actions:
-            actions["Fan RPM"].setText(f"Fan RPM: {fan_speed}")
-        if fan_level and "Fan Level" in actions:
-            actions["Fan Level"].setText(f"Fan Level: {fan_level}")
 
 class Ui_MainWindow(object):
-    def setupUi(self):
-        self.setObjectName("MainWindow")
-        self.resize(543, 334)
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(543, 334)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/icons/linux_packaging/thinkfan-ui.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.setWindowIcon(icon)
-        self.setIconSize(QtCore.QSize(32, 32))
-        self.centralwidget = QtWidgets.QWidget(self)
+        MainWindow.setWindowIcon(icon)
+        MainWindow.setIconSize(QtCore.QSize(32, 32))
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
         self.verticalLayout.setObjectName("verticalLayout")
@@ -171,19 +106,19 @@ class Ui_MainWindow(object):
         self.label_3.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByKeyboard|QtCore.Qt.LinksAccessibleByMouse)
         self.label_3.setObjectName("label_3")
         self.verticalLayout.addWidget(self.label_3)
-        self.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(self)
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 543, 34))
         self.menubar.setObjectName("menubar")
-        self.setMenuBar(self.menubar)
+        MainWindow.setMenuBar(self.menubar)
 
-        self.retranslateUi()
+        self.retranslateUi(MainWindow)
         self.slider.valueChanged['int'].connect(self.slider_value.setNum)
-        QtCore.QMetaObject.connectSlotsByName(self)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-    def retranslateUi(self):
+    def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("MainWindow", "ThinkFan UI"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "ThinkFan UI"))
         self.label.setText(_translate("MainWindow", "<html><head/><body><p>CPU temp info:</p></body></html>"))
         self.label_temp.setText(_translate("MainWindow", "missing data"))
         self.label_2.setText(_translate("MainWindow", "FAN info:"))

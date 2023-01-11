@@ -9,7 +9,8 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent
 from PyQt5.QtWidgets import QApplication, QDialog, QFileDialog, QGraphicsScene, QListWidget, QMainWindow, QMessageBox
 
-from ui.gui import Ui_MainWindow, Ui_SysTrayIndicator
+from ui.gui import Ui_MainWindow
+from ui.systray import QApp_SysTrayIndicator
 
 VERSION = "v0.8.1"
 
@@ -19,7 +20,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, app: QApplication):
         super().__init__()
         self.app = app
-        self.setupUi()
+        self.setupUi(self)
 
         self.label_3.setText(self.label_3.text().replace("$$$", VERSION))
 
@@ -54,7 +55,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.move(qr.topLeft())
 
 
-class ThinkFanUI(QApplication, Ui_SysTrayIndicator):
+class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
     def __init__(self, argv):
         super().__init__(argv)
         self.setApplicationVersion(VERSION)
