@@ -44,7 +44,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         msg.exec_()
 
     def appear(self):
-        self.center()
+        # self.center()
         self.show()
         self.raise_()
         self.activateWindow()
@@ -63,6 +63,7 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
     def __init__(self, argv):
         super(QApplication, self).__init__(argv)
         self.setApplicationVersion(VERSION)
+        self.setApplicationDisplayName("ThinkFan UI")
 
         self.mainWindow = MainWindow(self)
 

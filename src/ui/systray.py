@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QSystemTrayIcon, QMenu
 class QApp_SysTrayIndicator(object):
     def setupSysTrayIndicator(self):
         self.icon = QSystemTrayIcon(QtGui.QIcon(":/icons/linux_packaging/thinkfan-ui.svg"), self)
+        self.icon.activated.connect(self.mainWindow.appear)
 
         self.menu = QMenu()
         self.menu_visible = None
@@ -73,6 +74,8 @@ class QApp_SysTrayIndicator(object):
             if reading_name in actions:
                 actions[reading_name].setText(f"{reading_name}: {reading_value}")
 
+        fan_speed = None
+        fan_level = None
         for line in fan_info.split("\n"):
             if "level:" in line:
                 fan_level = line.split("level:")[-1].strip()
