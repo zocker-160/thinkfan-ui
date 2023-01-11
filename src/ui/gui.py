@@ -19,6 +19,10 @@ class Ui_SysTrayIndicator(object):
         self.icon.setContextMenu(self.menu)
 
     def updateSysTrayIndicatorMenu(self):
+        fan_info = self.getFanInfo()
+        if not fan_info or not fan_info.strip():
+            return
+
         for action in self.menu.actions():
             self.menu.removeAction(action)
         self.menu.addAction("Fan Full", lambda: self.setFanSpeed("full-speed"))
@@ -32,6 +36,8 @@ class Ui_SysTrayIndicator(object):
         self.menu.addAction("Fan Off", lambda: self.setFanSpeed("0"))
         self.menu.addAction("Fan Auto", lambda: self.setFanSpeed("auto"))
 
+        self.menu.addSeparator()
+
         tempInfo = self.getTempInfo()
         tempCount = 0
         for line in tempInfo.split("\n"):
@@ -39,6 +45,10 @@ class Ui_SysTrayIndicator(object):
                 continue
             self.menu.addAction(line, self.mainWindow.appear)
             tempCount += 1
+
+        fan_level = fan_info.split("level:")[-1].strip()
+        self.menu.addAction(f"Fan Level: {fan_level}", self.mainWindow.appear)
+
         if tempCount == 0:
             self.menu.addAction("ThinkFan UI", self.mainWindow.appear)
         self.menu.addAction("Quit", self.quit)
