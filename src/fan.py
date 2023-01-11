@@ -80,21 +80,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #print(sOut, sErr)
 
         if not sErr:
-            data = sOut.decode().split("\n")
+            lines = sOut.decode().split("\n")
             result = ""
-            tempRE = re.compile(r"^.+\Stemp")
+            tempRE = re.compile(r"^(\w+):\s+\+.*(°|C|F| +)$")
 
-            for i, line in enumerate(data):
+            for i, line in enumerate(lines):
+                line = line.strip()
+                # print(line)
                 if tempRE.match(line):
-                    i += 1
-                    while data[i] != "":
-                        if not "pci" in data[i].lower():
-                            result += data[i]
-                            result += "\n"
-
-                        i += 1
-                    else:
-                        break
+                    if "pci" not in line and "0.0" not in line:
+                        result += line + "\n"
         else:
             result = sErr.decode()
 
