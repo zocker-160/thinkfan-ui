@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-
+import os
 import sys
 import subprocess
 import json
@@ -161,7 +161,14 @@ class ThinkFanUI(QApplication, Ui_SysTrayIndicator):
             with open(PROC_FAN, "w+") as soc:
                 soc.write(f"level {speed}")
         except PermissionError:
-            self.mainWindow.showErrorMSG("Missing permissions! Please run as root.")
+            cmd = [f"pkexec python -c \"with open('{PROC_FAN}', 'w+') as soc: soc.write('level {speed}')\""]
+            result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            if result.returncode not in [0, 126]: # 126 is pkexec dismissed, 0 is success
+                print(result.returncode, result.stdout, result.stderr)
+                self.mainWindow.showErrorMSG("Missing permissions! Please run as root.")
+
+            # Relaunch as root - doesnt solve Qt env problems some root accounts have
+            # os.execvpe(f"pkexec", [os.path.realpath(__file__)] + sys.argv, os.environ)
         except FileNotFoundError:
             self.mainWindow.showErrorMSG(f"{PROC_FAN} does not exist!")
 
