@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-
 import sys
 import subprocess
 import json
@@ -10,33 +9,33 @@ from PyQt5.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent
 from PyQt5.QtWidgets import QApplication, QDialog, QFileDialog, QGraphicsScene, QListWidget, QMainWindow, QMessageBox
 
 from ui.gui import Ui_MainWindow
+from ui.systray import QApp_SysTrayIndicator
 
-VERSION = "v0.8.1"
+
+VERSION = "v0.8.2"
 
 PROC_FAN = "/proc/acpi/ibm/fan"
 
+
 class MainWindow(QMainWindow, Ui_MainWindow):
-
     def __init__(self, app: QApplication):
-        super().__init__()
+        super(QMainWindow, self).__init__()
         self.app = app
-
         self.setupUi(self)
         self.label_3.setText(self.label_3.text().replace("$$$", VERSION))
 
         # buttons
-        self.button_set.clicked.connect(lambda: self.setFanSpeed(self.slider.value()))
-        self.button_auto.clicked.connect(lambda: self.setFanSpeed("auto"))
-        self.button_full.clicked.connect(lambda: self.setFanSpeed("full-speed"))
+        self.button_set.clicked.connect(lambda: app.setFanSpeed(self.slider.value()))
+        self.button_auto.clicked.connect(lambda: app.setFanSpeed("auto"))
+        self.button_full.clicked.connect(lambda: app.setFanSpeed("full-speed"))
 
-        # timer
-        self.updateTimer = QTimer(self)
-        self.updateTimer.timeout.connect(self.getTempInfo)
-        self.updateTimer.timeout.connect(self.getFanInfo)
-        self.updateTimer.start(1000)
-        self.updateTimer.timeout.emit()
+    def closeEvent(self, event):
+        if self.app.use_indicator:
+            event.ignore()
+            self.hide()
 
     def showErrorMSG(self, msg_str: str, title_msg="ERROR"):
+        self.appear()
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Critical)
         msg.setText(msg_str)
@@ -44,7 +43,56 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         msg.setDefaultButton(QMessageBox.Close)
         msg.exec_()
 
-    def getTempInfo_old(self):
+    def appear(self):
+        # self.center()
+        self.show()
+        self.raise_()
+        self.activateWindow()
+
+    def center(self):
+        qr = self.frameGeometry()
+        qr.moveCenter(
+            self.app
+            .primaryScreen()
+            .availableGeometry()
+            .center())
+        self.move(qr.topLeft())
+
+
+class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
+    def __init__(self, argv):
+        super(QApplication, self).__init__(argv)
+        self.setApplicationVersion(VERSION)
+        self.setApplicationDisplayName("ThinkFan UI")
+
+        self.mainWindow = MainWindow(self)
+
+        self.use_indicator = "--no-indicator" not in argv
+        self.launched = "--launch" in argv # Use indicator and launch main window
+
+        if self.use_indicator:
+            self.setupSysTrayIndicator()
+
+        self.updateTimer = QTimer(self)
+        self.updateTimer.timeout.connect(self.updateUI)
+        self.updateTimer.start(1000)
+        self.updateTimer.timeout.emit()
+
+        if self.launched or not self.use_indicator:
+            self.mainWindow.appear()
+
+    def updateUI(self):
+        temp_info, fan_info = None, None
+        if self.mainWindow.isActiveWindow():
+            temp_info, fan_info = self.getTempInfo(), self.getFanInfo()
+            self.mainWindow.label_temp.setText(temp_info)
+            self.mainWindow.label_fan.setText(fan_info)
+        if self.use_indicator and self.menu_visible:
+            temp_info = temp_info or self.getTempInfo()
+            fan_info = fan_info or self.getFanInfo()
+            self.updateIndicatorMenu(temp_info, fan_info)
+
+    def getTempInfo_json(self):
         """ Reads output of the "sensors" command """
 
         proc = subprocess.Popen(["sensors", "-j"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -69,7 +117,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             result = sErr.decode()
 
-        self.label_temp.setText(result)
+        return result
 
     def getTempInfo(self):
         """ Reads output of the "sensors" command """
@@ -80,26 +128,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #print(sOut, sErr)
 
         if not sErr:
-            data = sOut.decode().split("\n")
+            lines = sOut.decode().split("\n")
             result = ""
-            tempRE = re.compile(r"^.+\Stemp")
+            tempRE = re.compile(r"^(\w+):\s+\+.*(°|C|F| +)$")
 
-            for i, line in enumerate(data):
+            for i, line in enumerate(lines):
+                line = line.strip()
                 if tempRE.match(line):
-                    i += 1
-                    while data[i] != "":
-                        if not "pci" in data[i].lower():
-                            result += data[i]
-                            result += "\n"
-
-                        i += 1
-                    else:
-                        break
+                    # if "CPU" in line:
+                    #     result = line
+                    if "pci" not in line and "0.0" not in line:
+                        result += line + "\n"
         else:
             result = sErr.decode()
 
-        self.label_temp.setText(result)
-        #print(result)
+        return result
 
     def getFanInfo(self):
         """ Parses the first 3 lines of output from /proc/acpi/ibm/fan """
@@ -119,7 +162,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             result = sErr.decode()
 
-        self.label_fan.setText(result)
+        return result
 
     def setFanSpeed(self, speed="auto"):
         """
@@ -133,22 +176,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             with open(PROC_FAN, "w+") as soc:
                 soc.write(f"level {speed}")
         except PermissionError:
-            self.showErrorMSG("Missing permissions! Please run as root.")
-        except FileNotFoundError:
-            self.showErrorMSG(f"{PROC_FAN} does not exist!")
+            cmd = [f"pkexec python -c \"with open('{PROC_FAN}', 'w+') as soc: soc.write('level {speed}')\""]
+            result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            if result.returncode not in [0, 126]: # 126 is pkexec dismissed, 0 is success
+                print(result.returncode, result.stdout, result.stderr)
+                self.mainWindow.showErrorMSG("Missing permissions! Please run as root.")
 
-    def center(self):
-        qr = self.frameGeometry()
-        qr.moveCenter(
-            self.app.primaryScreen().availableGeometry().center())
-        self.move(qr.topLeft())
+            # Relaunch as root - doesnt solve Qt env problems some root accounts have
+            # os.execvpe(f"pkexec", [os.path.realpath(__file__)] + sys.argv, os.environ)
+        except FileNotFoundError:
+            self.mainWindow.showErrorMSG(f"{PROC_FAN} does not exist!")
+
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    app.setApplicationVersion(VERSION)
-
-    mainWindow = MainWindow(app)
-    mainWindow.center()
-    mainWindow.show()
-
+    app = ThinkFanUI(sys.argv)
     sys.exit(app.exec_())
