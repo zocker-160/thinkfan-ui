@@ -82,12 +82,14 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
             self.mainWindow.appear()
 
     def updateUI(self):
-        temp_info = self.getTempInfo()
-        fan_info = self.getFanInfo()
+        temp_info, fan_info = None, None
         if self.mainWindow.isActiveWindow():
+            temp_info, fan_info = self.getTempInfo(), self.getFanInfo()
             self.mainWindow.label_temp.setText(temp_info)
             self.mainWindow.label_fan.setText(fan_info)
         if self.use_indicator and self.menu_visible:
+            temp_info = temp_info or self.getTempInfo()
+            fan_info = fan_info or self.getFanInfo()
             self.updateIndicatorMenu(temp_info, fan_info)
 
     def getTempInfo_json(self):
