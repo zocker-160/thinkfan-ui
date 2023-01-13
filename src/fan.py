@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import os
 import sys
 import subprocess
 import json
@@ -18,6 +19,15 @@ PROC_FAN = "/proc/acpi/ibm/fan"
 
 
 class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
+
+    @staticmethod
+    def updatePermissions() -> str:
+        command = ["kdesu", "-n", "chown", os.getlogin(), PROC_FAN]
+        result = subprocess.run(command)
+        print(result.returncode, result.stdout, result.stderr)
+
+        return result.stderr
+
     def __init__(self, argv):
         super(QApplication, self).__init__(argv)
         self.setApplicationVersion(APP_VERSION)
@@ -124,7 +134,7 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
 
         return result
 
-    def setFanSpeed(self, speed="auto"):
+    def setFanSpeed(self, speed="auto", retry=False):
         """
         Set speed of fan by changing level at /proc/acpi/ibm/fan
         possible values: 0-7, auto, disengaged, full-speed
@@ -136,14 +146,11 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
             with open(PROC_FAN, "w+") as soc:
                 soc.write(f"level {speed}")
         except PermissionError:
-            cmd = [f"pkexec python -c \"with open('{PROC_FAN}', 'w+') as soc: soc.write('level {speed}')\""]
-            result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            if result.returncode not in [0, 126]:  # 126 is pkexec dismissed, 0 is success
-                print(result.returncode, result.stdout, result.stderr)
-                self.mainWindow.showErrorMSG("Missing permissions! Please run as root.")
+            res = self.updatePermissions()
+            self.setFanSpeed(speed, True)
 
-            # Relaunch as root - doesnt solve Qt env problems some root accounts have
-            # os.execvpe(f"pkexec", [os.path.realpath(__file__)] + sys.argv, os.environ)
+            if retry:
+                self.mainWindow.showErrorMSG("Missing permissions! Failed to set fan speed.", detail=res)
         except FileNotFoundError:
             self.mainWindow.showErrorMSG(f"{PROC_FAN} does not exist!")
 
@@ -165,11 +172,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             event.ignore()
             self.hide()
 
-    def showErrorMSG(self, msg_str: str, title_msg="ERROR"):
+    def showErrorMSG(self, msg_str: str, title_msg="ERROR", detail: str = None):
         self.appear()
         msg = QMessageBox(self)
         msg.setIcon(QMessageBox.Critical)
         msg.setText(msg_str)
+        if detail:
+            msg.setDetailedText(detail)
         msg.setWindowTitle(title_msg)
         msg.setDefaultButton(QMessageBox.Close)
         msg.exec_()
