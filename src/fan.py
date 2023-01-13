@@ -11,52 +11,10 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
 from ui.gui import Ui_MainWindow
 from ui.systray import QApp_SysTrayIndicator
 
-
 APP_VERSION = "v0.8.2"
 APP_NAME = "ThinkFan UI"
 
 PROC_FAN = "/proc/acpi/ibm/fan"
-
-
-class MainWindow(QMainWindow, Ui_MainWindow):
-    def __init__(self, app: QApplication):
-        super(QMainWindow, self).__init__()
-        self.app = app
-        self.setupUi(self)
-        self.label_3.setText(self.label_3.text().replace("$$$", APP_VERSION))
-
-        # buttons
-        self.button_set.clicked.connect(lambda: app.setFanSpeed(self.slider.value()))
-        self.button_auto.clicked.connect(lambda: app.setFanSpeed("auto"))
-        self.button_full.clicked.connect(lambda: app.setFanSpeed("full-speed"))
-
-    def closeEvent(self, event):
-        if self.app.use_indicator:
-            event.ignore()
-            self.hide()
-
-    def showErrorMSG(self, msg_str: str, title_msg="ERROR"):
-        self.appear()
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Critical)
-        msg.setText(msg_str)
-        msg.setWindowTitle(title_msg)
-        msg.setDefaultButton(QMessageBox.Close)
-        msg.exec_()
-
-    def appear(self):
-        self.show()
-        self.raise_()
-        self.activateWindow()
-
-    def center(self):
-        qr = self.frameGeometry()
-        qr.moveCenter(
-            self.app
-            .primaryScreen()
-            .availableGeometry()
-            .center())
-        self.move(qr.topLeft())
 
 
 class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
@@ -69,19 +27,19 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
         self.mainWindow = MainWindow(self)
         self.mainWindow.center()
 
-        self.useIndicator = "--no-indicator" not in argv
-        self.launched = "--launch" in argv # Use indicator and launch main window
+        self.useIndicator = "--no-tray" not in argv
+        self.hideWindow = "--hide" in argv
 
         if self.useIndicator:
             self.setupSysTrayIndicator()
+
+        if not self.hideWindow or not self.useIndicator:
+            self.mainWindow.appear()
 
         self.updateTimer = QTimer(self)
         self.updateTimer.timeout.connect(self.updateUI)
         self.updateTimer.start(1000)
         self.updateTimer.timeout.emit()
-
-        if self.launched or not self.useIndicator:
-            self.mainWindow.appear()
 
     def updateUI(self):
         temp_info, fan_info = None, None
@@ -100,7 +58,7 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
         proc = subprocess.Popen(["sensors", "-j"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         sOut, sErr = proc.communicate()
 
-        #print(sOut, sErr)
+        # print(sOut, sErr)
 
         if not sErr:
             data: dict = json.loads(sOut)
@@ -127,7 +85,7 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
         proc = subprocess.Popen(["sensors"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         sOut, sErr = proc.communicate()
 
-        #print(sOut, sErr)
+        # print(sOut, sErr)
 
         if not sErr:
             lines = sOut.decode().split("\n")
@@ -180,7 +138,7 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
         except PermissionError:
             cmd = [f"pkexec python -c \"with open('{PROC_FAN}', 'w+') as soc: soc.write('level {speed}')\""]
             result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            if result.returncode not in [0, 126]: # 126 is pkexec dismissed, 0 is success
+            if result.returncode not in [0, 126]:  # 126 is pkexec dismissed, 0 is success
                 print(result.returncode, result.stdout, result.stderr)
                 self.mainWindow.showErrorMSG("Missing permissions! Please run as root.")
 
@@ -188,6 +146,47 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
             # os.execvpe(f"pkexec", [os.path.realpath(__file__)] + sys.argv, os.environ)
         except FileNotFoundError:
             self.mainWindow.showErrorMSG(f"{PROC_FAN} does not exist!")
+
+
+class MainWindow(QMainWindow, Ui_MainWindow):
+    def __init__(self, app: ThinkFanUI):
+        super(QMainWindow, self).__init__()
+        self.app = app
+        self.setupUi(self)
+        self.label_3.setText(self.label_3.text().replace("$$$", APP_VERSION))
+
+        # buttons
+        self.button_set.clicked.connect(lambda: app.setFanSpeed(self.slider.value()))
+        self.button_auto.clicked.connect(lambda: app.setFanSpeed("auto"))
+        self.button_full.clicked.connect(lambda: app.setFanSpeed("full-speed"))
+
+    def closeEvent(self, event):
+        if self.app.useIndicator:
+            event.ignore()
+            self.hide()
+
+    def showErrorMSG(self, msg_str: str, title_msg="ERROR"):
+        self.appear()
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText(msg_str)
+        msg.setWindowTitle(title_msg)
+        msg.setDefaultButton(QMessageBox.Close)
+        msg.exec_()
+
+    def appear(self):
+        self.show()
+        self.raise_()
+        self.activateWindow()
+
+    def center(self):
+        qr = self.frameGeometry()
+        qr.moveCenter(
+            self.app
+            .primaryScreen()
+            .availableGeometry()
+            .center())
+        self.move(qr.topLeft())
 
 
 if __name__ == "__main__":
