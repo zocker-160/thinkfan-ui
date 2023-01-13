@@ -12,12 +12,17 @@ It is written for **Linux only**. For Windows, see http://www.almico.com/speedfa
 
 ## How it Works?
 
-+ Parses `sensors` command to show CPU temp
-+ Modifies `/proc/acpi/ibm/fan` to change fan speed
+- Parses `sensors` command to show CPU temp
+- Modifies `/proc/acpi/ibm/fan` to change fan speed
+
+## CLI Arguments
+
+- `--no-tray` disables tray icon
+- `--hide` hides main window on start
 
 ## Dependencies
 
-`sudo apt install lm-sensors python3 python3-pyqt5`
+`sudo apt install lm-sensors policykit-1 python3 python3-pyqt5`
 
 ## Install
 
@@ -28,7 +33,7 @@ Package is available in the AUR: [thinkfan-ui](https://aur.archlinux.org/package
 ### Debian / Ubuntu
 
 - Download `.deb` from [release page](https://github.com/zocker-160/thinkfan-ui/releases)
-- Install using package manager of your choice or in terminal with `gdebi <packagename>.deb`
+- Install using package manager of your choice or in terminal with `apt install ./<packagename>.deb`
 
 ### Manual
 
@@ -36,7 +41,7 @@ Package is available in the AUR: [thinkfan-ui](https://aur.archlinux.org/package
 - Add line `options thinkpad_acpi fan_control=1`
 - Reboot
 - clone this repository and navigate to the `src` folder
-- `python3 fan.py` (add `sudo` to modify speed)
+- run `python3 fan.py`
 
 ---
 
