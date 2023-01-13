@@ -147,10 +147,12 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
                 soc.write(f"level {speed}")
         except PermissionError:
             res = self.updatePermissions()
-            self.setFanSpeed(speed, True)
-
-            if retry:
+            
+            if not retry:
+                self.setFanSpeed(speed, True)
+            else:
                 self.mainWindow.showErrorMSG("Missing permissions! Failed to set fan speed.", detail=res)
+
         except FileNotFoundError:
             self.mainWindow.showErrorMSG(f"{PROC_FAN} does not exist!")
 
