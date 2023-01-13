@@ -69,10 +69,10 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
         self.mainWindow = MainWindow(self)
         self.mainWindow.center()
 
-        self.use_indicator = "--no-indicator" not in argv
+        self.useIndicator = "--no-indicator" not in argv
         self.launched = "--launch" in argv # Use indicator and launch main window
 
-        if self.use_indicator:
+        if self.useIndicator:
             self.setupSysTrayIndicator()
 
         self.updateTimer = QTimer(self)
@@ -80,7 +80,7 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
         self.updateTimer.start(1000)
         self.updateTimer.timeout.emit()
 
-        if self.launched or not self.use_indicator:
+        if self.launched or not self.useIndicator:
             self.mainWindow.appear()
 
     def updateUI(self):
@@ -89,7 +89,7 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
             temp_info, fan_info = self.getTempInfo(), self.getFanInfo()
             self.mainWindow.label_temp.setText(temp_info)
             self.mainWindow.label_fan.setText(fan_info)
-        if self.use_indicator and self.menu_visible:
+        if self.useIndicator and self.menu_visible:
             temp_info = temp_info or self.getTempInfo()
             fan_info = fan_info or self.getFanInfo()
             self.updateIndicatorMenu(temp_info, fan_info)
