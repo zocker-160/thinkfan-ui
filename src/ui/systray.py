@@ -1,11 +1,12 @@
-from PyQt5 import QtGui
+
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QSystemTrayIcon, QMenu
 
 
-class QApp_SysTrayIndicator(object):
+class QApp_SysTrayIndicator:
     def setupSysTrayIndicator(self):
-        self.icon = QSystemTrayIcon(QtGui.QIcon(":/icons/linux_packaging/thinkfan-ui.svg"), self)
+        self.icon = QSystemTrayIcon(QIcon.fromTheme("thinkfan-ui"), self)
         self.icon.activated.connect(self.mainWindow.appear)
 
         self.menu = QMenu()

@@ -14,8 +14,7 @@
    <string>ThinkFan UI</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="qt_ressources.qrc">
-    <normaloff>:/icons/linux_packaging/thinkfan-ui.svg</normaloff>:/icons/linux_packaging/thinkfan-ui.svg</iconset>
+   <iconset theme="thinkfan-ui"/>
   </property>
   <property name="iconSize">
    <size>
@@ -62,7 +61,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>missing data</string>
+         <string>no data</string>
         </property>
         <property name="margin">
          <number>5</number>
@@ -111,7 +110,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>missing data</string>
+         <string>no data</string>
         </property>
         <property name="margin">
          <number>5</number>
@@ -182,7 +181,7 @@
        </font>
       </property>
       <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;ThinkFan UI by zocker_160 | &lt;a href=&quot;https://github.com/zocker-160/thinkfan-ui&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;https://github.com/zocker-160/thinkfan-ui&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; color:#000000;&quot;&gt; | $$$&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;ThinkFan UI | &lt;a href=&quot;https://github.com/zocker-160/thinkfan-ui&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;https://github.com/zocker-160/thinkfan-ui&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; color:#000000;&quot;&gt; | $$$&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -205,9 +204,7 @@
    </property>
   </widget>
  </widget>
- <resources>
-  <include location="qt_ressources.qrc"/>
- </resources>
+ <resources/>
  <connections>
   <connection>
    <sender>slider</sender>
