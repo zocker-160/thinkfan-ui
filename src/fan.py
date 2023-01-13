@@ -22,7 +22,7 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
 
     @staticmethod
     def updatePermissions():
-        command = ["kdesu", "-n", "chown", os.getlogin(), PROC_FAN]
+        command = ["pkexec", "chown", os.getlogin(), PROC_FAN]
         result = subprocess.run(command)
         print(result.returncode, result.stdout, result.stderr)
 
