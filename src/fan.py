@@ -26,6 +26,17 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
         result = subprocess.run(command)
         print(result.returncode, result.stdout, result.stderr)
 
+    @staticmethod
+    def checkPermissions() -> bool:
+        try:
+            with open(PROC_FAN, "w+"):
+                return True
+        except PermissionError:
+            return False
+        except FileNotFoundError:
+            # we ignore if the endpoint does not exist as it will show error in the UI later
+            return True
+
     def __init__(self, argv):
         super(QApplication, self).__init__(argv)
         self.setApplicationVersion(APP_VERSION)
@@ -37,6 +48,9 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
 
         self.useIndicator = "--no-tray" not in argv
         self.hideWindow = "--hide" in argv
+
+        if not self.checkPermissions():
+            self.updatePermissions()
 
         if self.useIndicator:
             self.setupSysTrayIndicator()
