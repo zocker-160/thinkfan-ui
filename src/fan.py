@@ -167,7 +167,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def showErrorMSG(self, msg_str: str, title_msg="ERROR"):
         self.appear()
-        msg = QMessageBox()
+        msg = QMessageBox(self)
         msg.setIcon(QMessageBox.Critical)
         msg.setText(msg_str)
         msg.setWindowTitle(title_msg)
