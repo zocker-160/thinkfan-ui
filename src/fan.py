@@ -12,7 +12,8 @@ from ui.gui import Ui_MainWindow
 from ui.systray import QApp_SysTrayIndicator
 
 
-VERSION = "v0.8.2"
+APP_VERSION = "v0.8.2"
+APP_NAME = "ThinkFan UI"
 
 PROC_FAN = "/proc/acpi/ibm/fan"
 
@@ -22,7 +23,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(QMainWindow, self).__init__()
         self.app = app
         self.setupUi(self)
-        self.label_3.setText(self.label_3.text().replace("$$$", VERSION))
+        self.label_3.setText(self.label_3.text().replace("$$$", APP_VERSION))
 
         # buttons
         self.button_set.clicked.connect(lambda: app.setFanSpeed(self.slider.value()))
@@ -62,8 +63,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
     def __init__(self, argv):
         super(QApplication, self).__init__(argv)
-        self.setApplicationVersion(VERSION)
-        self.setApplicationDisplayName("ThinkFan UI")
+        self.setApplicationVersion(APP_VERSION)
+        self.setApplicationName(APP_NAME)
+        self.setApplicationDisplayName(APP_NAME)
 
         self.mainWindow = MainWindow(self)
 
