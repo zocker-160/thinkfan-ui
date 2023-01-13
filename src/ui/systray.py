@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QSystemTrayIcon, QMenu
 class QApp_SysTrayIndicator:
     def setupSysTrayIndicator(self):
         self.icon = QSystemTrayIcon(QIcon.fromTheme("thinkfan-ui"), self)
-        self.icon.activated.connect(self.mainWindow.appear)
+        self.icon.activated.connect(self.mainWindow.toggleAppear)
 
         self.menu = QMenu()
         self.menu_visible = None

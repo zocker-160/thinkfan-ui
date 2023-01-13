@@ -174,6 +174,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         msg.setDefaultButton(QMessageBox.Close)
         msg.exec_()
 
+    def toggleAppear(self):
+        if self.isVisible():
+            self.hide()
+        else:
+            self.appear()
+
     def appear(self):
         self.show()
         self.raise_()
