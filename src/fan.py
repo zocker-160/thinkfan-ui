@@ -21,12 +21,10 @@ PROC_FAN = "/proc/acpi/ibm/fan"
 class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
 
     @staticmethod
-    def updatePermissions() -> str:
+    def updatePermissions():
         command = ["kdesu", "-n", "chown", os.getlogin(), PROC_FAN]
         result = subprocess.run(command)
         print(result.returncode, result.stdout, result.stderr)
-
-        return result.stderr
 
     def __init__(self, argv):
         super(QApplication, self).__init__(argv)
@@ -146,12 +144,12 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
             with open(PROC_FAN, "w+") as soc:
                 soc.write(f"level {speed}")
         except PermissionError:
-            res = self.updatePermissions()
-            
+            self.updatePermissions()
+
             if not retry:
                 self.setFanSpeed(speed, True)
             else:
-                self.mainWindow.showErrorMSG("Missing permissions! Failed to set fan speed.", detail=res)
+                self.mainWindow.showErrorMSG("Missing permissions! Failed to set fan speed.")
 
         except FileNotFoundError:
             self.mainWindow.showErrorMSG(f"{PROC_FAN} does not exist!")
