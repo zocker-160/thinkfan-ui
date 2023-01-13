@@ -45,7 +45,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         msg.exec_()
 
     def appear(self):
-        # self.center()
         self.show()
         self.raise_()
         self.activateWindow()
@@ -68,6 +67,7 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
         self.setApplicationDisplayName(APP_NAME)
 
         self.mainWindow = MainWindow(self)
+        self.mainWindow.center()
 
         self.use_indicator = "--no-indicator" not in argv
         self.launched = "--launch" in argv # Use indicator and launch main window
