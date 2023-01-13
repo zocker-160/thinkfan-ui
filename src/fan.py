@@ -1,12 +1,12 @@
 #! /usr/bin/env python3
+
 import sys
 import subprocess
 import json
 import re
 
 from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent
-from PyQt5.QtWidgets import QApplication, QDialog, QFileDialog, QGraphicsScene, QListWidget, QMainWindow, QMessageBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
 
 from ui.gui import Ui_MainWindow
 from ui.systray import QApp_SysTrayIndicator
