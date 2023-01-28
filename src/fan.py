@@ -112,7 +112,7 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
         if not sErr:
             lines = sOut.decode().split("\n")
             result = ""
-            tempRE = re.compile(r"^(\w+):\s+\+.*(°|C|F| +)$")
+            tempRE = re.compile(r"^([\w ]+):\s+\+.*(°|C|F| +).$")
 
             for i, line in enumerate(lines):
                 line = line.strip()
