@@ -10,4 +10,6 @@ AppDir
 appimage-builder-cache
 
 linux_packaging/AUR*
-linux_packaging/MPR*
+linux_packaging/DEB-thinkfan-ui/pkg/*
+linux_packaging/DEB-thinkfan-ui/src/*
+linux_packaging/DEB-thinkfan-ui/thinkfan*
