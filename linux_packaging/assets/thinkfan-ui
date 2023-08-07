@@ -1,3 +1,0 @@
-#! /usr/bin/env bash
-
-python3 /usr/lib/thinkfan-ui/fan.py "$@"
