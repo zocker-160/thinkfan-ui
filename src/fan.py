@@ -158,6 +158,7 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
         try:
             with open(PROC_FAN, "w") as soc:
                 soc.write(f"level {speed}")
+
         except PermissionError:
             self.updatePermissions()
 
@@ -169,6 +170,10 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
         except FileNotFoundError:
             self.mainWindow.showErrorMSG(f"{PROC_FAN} does not exist!")
 
+        except OSError:
+            self.mainWindow.showErrorMSG(
+                f"thinkpad_acpi does not seem to be set up correclty",
+                detail="Please check that /etc/modprobe.d/thinkpad_acpi.conf contains \"options thinkpad_acpi fan_control=1\"")
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, app: ThinkFanUI):
