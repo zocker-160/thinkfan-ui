@@ -69,6 +69,7 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
             temp_info, fan_info = self.getTempInfo(), self.getFanInfo()
             self.mainWindow.label_temp.setText(temp_info)
             self.mainWindow.label_fan.setText(fan_info)
+
         if self.useIndicator and self.menu_visible:
             temp_info = temp_info or self.getTempInfo()
             fan_info = fan_info or self.getFanInfo()
