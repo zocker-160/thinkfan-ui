@@ -172,7 +172,7 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
 
         except OSError:
             self.mainWindow.showErrorMSG(
-                f"thinkpad_acpi does not seem to be set up correclty",
+                f"thinkpad_acpi does not seem to be set up correctly",
                 detail="Please check that /etc/modprobe.d/thinkpad_acpi.conf contains \"options thinkpad_acpi fan_control=1\"")
 
 class MainWindow(QMainWindow, Ui_MainWindow):
