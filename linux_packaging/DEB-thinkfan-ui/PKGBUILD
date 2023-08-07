@@ -1,7 +1,7 @@
 # Maintainer: zocker_160 <zocker1600 at posteo dot net>
 
 pkgname=thinkfan-ui
-pkgver=0.9.1
+pkgver=0.9.2
 pkgrel=1
 pkgdesc="A small gui app for Linux to control the fan speed and monitor temps on a ThinkPad"
 arch=('x86_64')
@@ -22,9 +22,9 @@ build() {
 package() {
   cd $srcdir/$pkgname
 
-  install -d -m755 src "$pkgdir"/usr/lib/"$pkgname"
-  cp -r src/* "$pkgdir"/usr/lib/"$pkgname"
-  install -D -m755 linux_packaging/assets/thinkfan-ui -t "$pkgdir"/usr/bin
-  install -D -m644 linux_packaging/assets/thinkfan-ui.svg -t "$pkgdir"/usr/share/icons/hicolor/scalable/apps
-  install -D -m644 linux_packaging/assets/thinkfan-ui.desktop -t "$pkgdir"/usr/share/applications
+  install -d -m755 src "$pkgdir/usr/lib/$pkgname"
+  cp -r src/* "$pkgdir/usr/lib/$pkgname"
+  install -D -m755 linux_packaging/assets/thinkfan-ui -t "$pkgdir/usr/bin"
+  install -D -m644 linux_packaging/assets/thinkfan-ui.svg -t "$pkgdir/usr/share/icons/hicolor/scalable/apps"
+  install -D -m644 linux_packaging/assets/thinkfan-ui.desktop -t "$pkgdir/usr/share/applications"
 }
