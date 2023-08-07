@@ -44,19 +44,26 @@ class QApp_SysTrayIndicator:
         self.fanSpeedMenu.addAction("Fan 1", lambda: self.setFanSpeed("1"))
         self.fanSpeedMenu.addAction("Fan Off", lambda: self.setFanSpeed("0"))
 
-        self.menu.addMenu(self.fanSpeedMenu)
-        self.menu.addAction("Set Fan Auto", lambda: self.setFanSpeed("auto"))
-
+        self.menu.addSection("sensor values")
         self.menu.addSeparator()
 
+        # TODO: this needs to be done properly
         tempInfo = self.getTempInfo()
         for line in tempInfo.split("\n"):
             if not line or not line.strip():
                 continue
             temp_reading = line.replace(" ", "").replace(":", ":  ")
             self.menu.addAction(temp_reading, self.mainWindow.appear)
-
         self.menu.addAction(f"Fan RPM: ", self.mainWindow.appear)
+
+        self.menu.addSeparator()
+
+        self.menu.addSection("controls")
+        self.menu.addMenu(self.fanSpeedMenu)
+        self.menu.addAction("Set Fan Auto", lambda: self.setFanSpeed("auto"))
+
+        self.menu.addSeparator()
+
         self.menu.addAction("Quit", self.quit)
 
     def updateIndicatorMenu(self, temp_info, fan_info):
