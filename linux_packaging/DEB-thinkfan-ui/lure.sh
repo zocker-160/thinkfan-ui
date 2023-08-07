@@ -1,7 +1,7 @@
 maintainer="zocker_160 <zocker1600 at posteo dot net>"
 
 name=thinkfan-ui
-version=0.9.2
+version=0.10.0
 release=1
 desc="A small gui app for Linux to control the fan speed and monitor temps on a ThinkPad"
 homepage="https://github.com/zocker-160/thinkfan-ui"
@@ -12,8 +12,8 @@ licenses=('GPL-3.0-only')
 provides=("thinkfan-ui")
 #conflicts=('')
 deps=('python3' 'python3-pyqt5' 'lm-sensors' 'policykit-1')
-#sources=("git+https://github.com/zocker-160/thinkfan-ui.git?~rev=$version")
-sources=("git+https://github.com/zocker-160/thinkfan-ui.git")
+sources=("git+https://github.com/zocker-160/thinkfan-ui.git?~rev=$version")
+#sources=("git+https://github.com/zocker-160/thinkfan-ui.git")
 checksums=("SKIP")
 
 scripts=(
