@@ -29,7 +29,7 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
     @staticmethod
     def checkPermissions() -> bool:
         try:
-            with open(PROC_FAN, "w+"):
+            with open(PROC_FAN, "w"):
                 return True
         except PermissionError:
             return False
@@ -156,7 +156,7 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
         print("set speed:", speed)
 
         try:
-            with open(PROC_FAN, "w+") as soc:
+            with open(PROC_FAN, "w") as soc:
                 soc.write(f"level {speed}")
         except PermissionError:
             self.updatePermissions()
