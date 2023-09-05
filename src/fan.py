@@ -22,8 +22,12 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
 
     @staticmethod
     def updatePermissions():
-        command = ["pkexec", "chown", os.getlogin(), PROC_FAN]
-        result = subprocess.run(command)
+        try:
+            command = ["pkexec", "chown", os.getlogin(), PROC_FAN]
+            result = subprocess.run(command)
+        except OSError:
+            command = ["pkexec", "chmod", "777", PROC_FAN]
+            result = subprocess.run(command)
         print(result.returncode, result.stdout, result.stderr)
 
     @staticmethod
