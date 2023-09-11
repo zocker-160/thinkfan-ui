@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
 from ui.gui import Ui_MainWindow
 from ui.systray import QApp_SysTrayIndicator
 
-APP_VERSION = "v0.10.1"
+APP_VERSION = "v0.10.2"
 APP_NAME = "ThinkFan UI"
 APP_DESKTOP_NAME = "thinkfan-ui"
 
