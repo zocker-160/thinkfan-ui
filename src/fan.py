@@ -14,6 +14,7 @@ from ui.systray import QApp_SysTrayIndicator
 
 APP_VERSION = "v0.10.1"
 APP_NAME = "ThinkFan UI"
+APP_DESKTOP_NAME = "thinkfan-ui"
 
 PROC_FAN = "/proc/acpi/ibm/fan"
 
@@ -46,6 +47,7 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
         self.setApplicationVersion(APP_VERSION)
         self.setApplicationName(APP_NAME)
         self.setApplicationDisplayName(APP_NAME)
+        self.setDesktopFileName(APP_DESKTOP_NAME)
 
         self.mainWindow = MainWindow(self)
         self.mainWindow.center()
