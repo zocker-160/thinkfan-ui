@@ -1,12 +1,13 @@
 
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, QObject
 from PyQt5.QtWidgets import QSystemTrayIcon, QMenu
 
 
 # NOTE: this code is terrible, but I honestly don't care
 
-class QApp_SysTrayIndicator:
+class QApp_SysTrayIndicator(QObject):
+
     def setupSysTrayIndicator(self):
         self.icon = QSystemTrayIcon(QIcon.fromTheme("thinkfan-ui"), self)
         self.icon.activated.connect(self.mainWindow.toggleAppear)
@@ -66,7 +67,7 @@ class QApp_SysTrayIndicator:
 
         self.menu.addSeparator()
 
-        self.menu.addAction("Exit", self.quit)
+        self.menu.addAction("Exit", self.app.quit)
 
     def updateIndicatorMenu(self, temp_info, fan_info):
         temp_info = temp_info.strip()

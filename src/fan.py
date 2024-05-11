@@ -7,30 +7,35 @@ import json
 import re
 
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QMessageBox
 
 from ui.gui import Ui_MainWindow
 from ui.systray import QApp_SysTrayIndicator
+from QSingleApplication import QSingleApplicationTCP
 
-APP_VERSION = "0.10.2"
 APP_NAME = "ThinkFan UI"
+APP_VERSION = "0.10.2"
 APP_DESKTOP_NAME = "thinkfan-ui"
+APP_UUID = "587dedfb-19f2-4b2a-bc74-3d656e80966a"
 
 GITHUB_URL = "https://github.com/zocker-160/thinkfan-ui"
 
 PROC_FAN = "/proc/acpi/ibm/fan"
 
-class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
+class ThinkFanUI(QApp_SysTrayIndicator):
 
-    def __init__(self, argv):
-        super(QApplication, self).__init__(argv)
-        self.setApplicationVersion(APP_VERSION)
-        self.setApplicationName(APP_NAME)
-        self.setApplicationDisplayName(APP_NAME)
-        self.setDesktopFileName(APP_DESKTOP_NAME)
+    def __init__(self, app: QSingleApplicationTCP, argv):
+        super().__init__()
+
+        self.app = app
+        self.app.setApplicationVersion(APP_VERSION)
+        self.app.setApplicationName(APP_NAME)
+        self.app.setApplicationDisplayName(APP_NAME)
+        self.app.setDesktopFileName(APP_DESKTOP_NAME)
 
         self.mainWindow = MainWindow(self)
         self.mainWindow.center()
+        self.app.onActivate.connect(self.mainWindow.appear)
 
         self.useIndicator = "--no-tray" not in argv
         self.hideWindow = "--hide" in argv
@@ -170,7 +175,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # menu
         self.actionClose.triggered.connect(self.close)
-        self.actionExit.triggered.connect(self.app.quit)
+        self.actionExit.triggered.connect(self.app.app.quit)
         self.actionGitHub.triggered.connect(openGitHub)
         self.actionAbout.triggered.connect(self.showAbout)
         self.actionAbout_Qt.triggered.connect(lambda: QMessageBox.aboutQt(self))
@@ -188,12 +193,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def showErrorMSG(self, msg_str: str, title_msg="ERROR", detail: str = None):
         self.appear()
         msg = QMessageBox(self)
-        msg.setIcon(QMessageBox.Critical)
+        msg.setIcon(QMessageBox.Icon.Critical)
         msg.setText(msg_str)
         if detail:
             msg.setDetailedText(detail)
         msg.setWindowTitle(title_msg)
-        msg.setDefaultButton(QMessageBox.Close)
+        msg.setDefaultButton(QMessageBox.StandardButton.Close)
         msg.exec_()
 
     def showAbout(self):
@@ -224,7 +229,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def center(self):
         qr = self.frameGeometry()
         qr.moveCenter(
-            self.app
+            self.app.app # yeah I know this is terriblem, pls just ignore
             .primaryScreen()
             .availableGeometry()
             .center())
@@ -256,5 +261,11 @@ def openGitHub():
     subprocess.Popen(["xdg-open", GITHUB_URL])
 
 if __name__ == "__main__":
-    app = ThinkFanUI(sys.argv)
-    sys.exit(app.exec_())
+    app = QSingleApplicationTCP(APP_UUID, sys.argv)
+
+    if app.isRunning:
+        print("Other instance already running - exit")
+        sys.exit()
+
+    fan = ThinkFanUI(app, sys.argv)
+    sys.exit(app.exec())
