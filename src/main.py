@@ -14,7 +14,7 @@ from ui.systray import QApp_SysTrayIndicator
 from QSingleApplication import QSingleApplicationTCP
 
 APP_NAME = "ThinkFan UI"
-APP_VERSION = "0.10.2"
+APP_VERSION = "0.11.0"
 APP_DESKTOP_NAME = "thinkfan-ui"
 APP_UUID = "587dedfb-19f2-4b2a-bc74-3d656e80966a"
 
