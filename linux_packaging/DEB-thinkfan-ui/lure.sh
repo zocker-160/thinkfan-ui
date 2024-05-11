@@ -1,7 +1,7 @@
 maintainer="zocker_160 <zocker1600 at posteo dot net>"
 
 name=thinkfan-ui
-version=0.10.2
+version=0.11.0
 release=1
 desc="A small gui app for Linux to control the fan speed and monitor temps on a ThinkPad"
 homepage="https://github.com/zocker-160/thinkfan-ui"
