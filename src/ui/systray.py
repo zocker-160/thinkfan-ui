@@ -4,6 +4,8 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QSystemTrayIcon, QMenu
 
 
+# NOTE: this code is terrible, but I honestly don't care
+
 class QApp_SysTrayIndicator:
     def setupSysTrayIndicator(self):
         self.icon = QSystemTrayIcon(QIcon.fromTheme("thinkfan-ui"), self)
@@ -21,7 +23,7 @@ class QApp_SysTrayIndicator:
         self.icon.setContextMenu(self.menu)
         self.icon.show()
 
-        #  aboutToShow event is fired on startup, needs to be reversed
+        # aboutToShow event is fired on startup, needs to be reversed
         onceTimer = QTimer(self)
         onceTimer.setSingleShot(True)
         onceTimer.timeout.connect(lambda: self.set_menu_visible(False))
