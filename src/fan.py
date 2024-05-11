@@ -12,35 +12,15 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
 from ui.gui import Ui_MainWindow
 from ui.systray import QApp_SysTrayIndicator
 
-APP_VERSION = "v0.10.2"
+APP_VERSION = "0.10.2"
 APP_NAME = "ThinkFan UI"
 APP_DESKTOP_NAME = "thinkfan-ui"
 
+GITHUB_URL = "https://github.com/zocker-160/thinkfan-ui"
+
 PROC_FAN = "/proc/acpi/ibm/fan"
 
-
 class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
-
-    @staticmethod
-    def updatePermissions():
-        try:
-            command = ["pkexec", "chown", os.getlogin(), PROC_FAN]
-            result = subprocess.run(command)
-        except OSError:
-            command = ["pkexec", "chmod", "777", PROC_FAN]
-            result = subprocess.run(command)
-        print(result.returncode, result.stdout, result.stderr)
-
-    @staticmethod
-    def checkPermissions() -> bool:
-        try:
-            with open(PROC_FAN, "w"):
-                return True
-        except PermissionError:
-            return False
-        except FileNotFoundError:
-            # we ignore if the endpoint does not exist as it will show error in the UI later
-            return True
 
     def __init__(self, argv):
         super(QApplication, self).__init__(argv)
@@ -55,8 +35,8 @@ class ThinkFanUI(QApplication, QApp_SysTrayIndicator):
         self.useIndicator = "--no-tray" not in argv
         self.hideWindow = "--hide" in argv
 
-        if not self.checkPermissions():
-            self.updatePermissions()
+        if not checkPermissions():
+            updatePermissions()
 
         if self.useIndicator:
             self.setupSysTrayIndicator()
@@ -186,7 +166,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(QMainWindow, self).__init__()
         self.app = app
         self.setupUi(self)
-        self.label_3.setText(self.label_3.text().replace("$$$", APP_VERSION))
+        self.versionLabel.setText(f"v{APP_VERSION}")
+
+        # menu
+        self.actionClose.triggered.connect(self.close)
+        self.actionExit.triggered.connect(self.app.quit)
+        self.actionGitHub.triggered.connect(openGitHub)
+        self.actionAbout.triggered.connect(self.showAbout)
+        self.actionAbout_Qt.triggered.connect(lambda: QMessageBox.aboutQt(self))
 
         # buttons
         self.button_set.clicked.connect(lambda: app.setFanSpeed(self.slider.value()))
@@ -209,6 +196,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         msg.setDefaultButton(QMessageBox.Close)
         msg.exec_()
 
+    def showAbout(self):
+        about = f"""
+        <h3>{APP_NAME} - v{APP_VERSION}</h3>
+
+        made by zocker_160
+        <br>
+        licensed under GPLv3 | 2021 - 2024
+        <br>
+        <br>
+        <a href=\"{GITHUB_URL}\">{GITHUB_URL}</a>
+        """
+
+        QMessageBox.about(self, f"About {APP_NAME}", about)
+
     def toggleAppear(self):
         if self.isVisible():
             self.hide()
@@ -229,6 +230,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             .center())
         self.move(qr.topLeft())
 
+
+# some helper functions
+
+def updatePermissions():
+    try:
+        command = ["pkexec", "chown", os.getlogin(), PROC_FAN]
+        result = subprocess.run(command)
+    except OSError:
+        command = ["pkexec", "chmod", "777", PROC_FAN]
+        result = subprocess.run(command)
+    print(result.returncode, result.stdout, result.stderr)
+
+def checkPermissions() -> bool:
+    try:
+        with open(PROC_FAN, "w"):
+            return True
+    except PermissionError:
+        return False
+    except FileNotFoundError:
+        # we ignore if the endpoint does not exist as it will show error in the UI later
+        return True
+
+def openGitHub():
+    subprocess.Popen(["xdg-open", GITHUB_URL])
 
 if __name__ == "__main__":
     app = ThinkFanUI(sys.argv)

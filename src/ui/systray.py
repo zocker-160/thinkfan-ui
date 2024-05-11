@@ -66,7 +66,7 @@ class QApp_SysTrayIndicator:
 
         self.menu.addSeparator()
 
-        self.menu.addAction("Quit", self.quit)
+        self.menu.addAction("Exit", self.quit)
 
     def updateIndicatorMenu(self, temp_info, fan_info):
         temp_info = temp_info.strip()
