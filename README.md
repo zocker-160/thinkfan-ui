@@ -2,7 +2,7 @@
 
 ![Screenshot](images/Screenshot_20210721_213215.png)
 
-This is a complete rewrite of [scientifichackers/thinkfan-control-gui](https://github.com/scientifichackers/thinkfan-control-gui) using PyQt5.
+This is a complete rewrite of [scientifichackers/thinkfan-control-gui](https://github.com/scientifichackers/thinkfan-control-gui) using ~~PyQt5~~ **PyQt6**.
 
 This is an application for controlling fan speed on IBM/Lenovo ThinkPads.
 
