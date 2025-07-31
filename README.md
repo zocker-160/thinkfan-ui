@@ -1,6 +1,6 @@
 # ![](images/thinkfan-icon.png) Thinkfan UI
 
-![Screenshot](images/Screenshot_20210721_213215.png)
+![Screenshot](images/screenshot_PyQt6.png)
 
 This is a complete rewrite of [scientifichackers/thinkfan-control-gui](https://github.com/scientifichackers/thinkfan-control-gui) using ~~PyQt5~~ **PyQt6**.
 
