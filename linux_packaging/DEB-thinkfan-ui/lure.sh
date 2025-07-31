@@ -11,7 +11,7 @@ licenses=('GPL-3.0-only')
 
 provides=("thinkfan-ui")
 #conflicts=('')
-deps=('python3' 'python3-pyqt5' 'lm-sensors' 'policykit-1')
+deps=('python3' 'python3-pyqt6' 'lm-sensors' 'polkit-1')
 sources=("git+https://github.com/zocker-160/thinkfan-ui.git?~rev=$version")
 #sources=("git+https://github.com/zocker-160/thinkfan-ui.git")
 checksums=("SKIP")
