@@ -318,7 +318,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         about = f"""
         <h3>{APP_NAME} - v{APP_VERSION}</h3>
         <p>A simple GUI for controlling ThinkPad fan speeds.</p>
-        <p>Made by zocker_160, licensed under GPLv3.</p>
+        <p>Made by zocker_160 and contributors, licensed under GPLv3.</p>
         <a href=\"{GITHUB_URL}\">{GITHUB_URL}</a>
         """
         QMessageBox.about(self, f"About {APP_NAME}", about)
