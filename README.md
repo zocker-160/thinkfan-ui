@@ -1,14 +1,14 @@
 # ![](images/thinkfan-icon.png) Thinkfan UI
 
-![Screenshot](images/Screenshot_20210721_213215.png)
+![Screenshot](images/screenshot_PyQt6.png)
 
-This is a complete rewrite of [scientifichackers/thinkfan-control-gui](https://github.com/scientifichackers/thinkfan-control-gui) using PyQt5.
+This is a complete rewrite of [scientifichackers/thinkfan-control-gui](https://github.com/scientifichackers/thinkfan-control-gui) using ~~PyQt5~~ **PyQt6**.
 
 This is an application for controlling fan speed on IBM/Lenovo ThinkPads.
 
 It can also monitor CPU temp and fan RPM.
 
-It is written for **Linux only**. For Windows, see http://www.almico.com/speedfan.php   
+It is written for **Linux only**. For Windows, see http://www.almico.com/speedfan.php
 
 ## How it Works?
 
@@ -22,7 +22,11 @@ It is written for **Linux only**. For Windows, see http://www.almico.com/speedfa
 
 ## Dependencies
 
-`sudo apt install lm-sensors policykit-1 python3 python3-pyqt5`
+# Fedora
+`sudo dnf install lm_sensors polkit python3 python3-pyqt6`
+
+# Debian / Ubuntu
+`sudo apt install lm-sensors policykit-1 python3 python3-pyqt6`
 
 ## Install
 
@@ -37,7 +41,7 @@ Package is available in the AUR: [thinkfan-ui](https://aur.archlinux.org/package
 
 ### Manual
 
-- Open this file, using command -- `sudo nano /etc/modprobe.d/thinkpad_acpi.conf` 
+- Open this file, using command -- `sudo nano /etc/modprobe.d/thinkpad_acpi.conf`
 - Add line `options thinkpad_acpi fan_control=1`
 - Reboot
 - clone this repository and navigate to the `src` folder

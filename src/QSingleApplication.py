@@ -1,7 +1,7 @@
-
-from PyQt5.QtCore import QTextStream, pyqtSignal
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtNetwork import (
+# MODIFIED
+from PyQt6.QtCore import QTextStream, pyqtSignal
+from PyQt6.QtWidgets import QApplication
+from PyQt6.QtNetwork import (
     QHostAddress,
     QLocalSocket,
     QLocalServer,
@@ -53,7 +53,7 @@ class QSingleApplication(QApplication):
             self.onActivate.emit()
 
     def stopSockets(self):
-        self.localSocket.close()    
+        self.localSocket.close()
         if self.server:
             self.server.close()
 
@@ -92,7 +92,7 @@ class QSingleApplicationTCP(QApplication):
 
         inData = QTextStream(inConn)
         inConn.readyRead.connect(lambda: self.onReadyRead(inData))
-        
+
     def onReadyRead(self, inStream: QTextStream):
         msg = inStream.readAll()
 
