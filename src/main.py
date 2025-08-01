@@ -3,12 +3,20 @@
 import os
 import sys
 import subprocess
-import json
 import re
 
-from PyQt6.QtCore import QTimer, Qt
+from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QPalette
-from PyQt6.QtWidgets import QMainWindow, QMessageBox, QWidget, QLabel, QHBoxLayout, QSpacerItem, QSizePolicy, QButtonGroup
+from PyQt6.QtWidgets import (
+    QMainWindow,
+    QMessageBox,
+    QWidget,
+    QLabel,
+    QHBoxLayout,
+    QSpacerItem,
+    QSizePolicy,
+    QButtonGroup
+)
 
 from ui.gui import Ui_MainWindow
 from ui.systray import QApp_SysTrayIndicator
