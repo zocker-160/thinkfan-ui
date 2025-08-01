@@ -1,7 +1,7 @@
 maintainer="zocker_160 <zocker1600 at posteo dot net>"
 
 name=thinkfan-ui
-version=0.11.0
+version=1.0.0
 release=1
 desc="A small gui app for Linux to control the fan speed and monitor temps on a ThinkPad"
 homepage="https://github.com/zocker-160/thinkfan-ui"
@@ -25,7 +25,7 @@ scripts=(
 package() {
   cd "$srcdir/$name"
 
-  install -d -m755 src "$pkgdir/opt/$name"
+  mkdir -p "$pkgdir/opt/$name"
   cp -r src/* "$pkgdir/opt/$name"
 
   install-binary linux_packaging/thinkfan-ui

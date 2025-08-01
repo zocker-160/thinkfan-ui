@@ -2,7 +2,7 @@
 # This file is used by rpmbuild to create the RPM package.
 
 Name:       thinkfan-ui
-Version:    0.11.0
+Version:    1.0.0
 Release:    1%{?dist}
 Summary:    A GUI for controlling fan speed on ThinkPads
 
@@ -77,6 +77,8 @@ fi
 /usr/lib/modules-load.d/%{name}.conf
 
 %changelog
+* Thu Aug 01 2025 zocker_160 <zocker1600@posteo.net> - 1.0.0-1
+- PyQt6 port and UI upgrade
 * Thu Aug 01 2024 Your Name <your.email@example.com> - 0.11.0-5
 - Use absolute RPM macros for file paths to ensure build reliability
 * Thu Aug 01 2024 Your Name <your.email@example.com> - 0.11.0-4
