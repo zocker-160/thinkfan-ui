@@ -47,6 +47,7 @@ class ThinkFanUI(QApp_SysTrayIndicator):
 
         self.mainWindow = MainWindow(self)
         self.mainWindow.center()
+        self.mainWindow._set_fan_mode_auto()
         self.app.onActivate.connect(self.mainWindow.appear)
 
         self.useIndicator = "--no-tray" not in argv
@@ -268,8 +269,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # 5. Set initial state
         self.button_auto.setChecked(True)
-        self._set_fan_mode_auto()
-
 
         # Menu actions
         self.actionClose.triggered.connect(self.close)
