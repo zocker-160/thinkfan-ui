@@ -2,6 +2,7 @@
 .idea
 *.AppImage
 *__pycache__
+venv/
 
 *.deb
 *.gz
