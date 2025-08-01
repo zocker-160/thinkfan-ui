@@ -353,7 +353,10 @@ def updatePermissions():
     print(f"Permission update exited with code: {result.returncode}")
 
 def checkPermissions() -> bool:
-    return os.access( PROC_FAN, os.W_OK)
+    if not os.path.isfile(PROC_FAN):
+        # we cannot change permissions of a file that does not exist
+        return True
+    return os.access(PROC_FAN, os.W_OK)
 
 def openGitHub():
     subprocess.Popen(["xdg-open", GITHUB_URL])
