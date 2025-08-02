@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -15,11 +15,13 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QSpacerItem,
     QSizePolicy,
-    QButtonGroup
+    QButtonGroup,
+    QVBoxLayout
 )
 
 from ui.gui import Ui_MainWindow
 from ui.systray import QApp_SysTrayIndicator
+from ui.curve_editor import FanCurveEditor
 from QSingleApplication import QSingleApplicationTCP
 
 APP_NAME = "ThinkFan UI"
@@ -145,7 +147,7 @@ class ThinkFanUI(QApp_SysTrayIndicator):
                 row_style = f"background-color: {alternate_color}; border-radius: 4px;"
             else: # Apply to even rows
                 row_style = f"background-color: {base_color}; border-radius: 4px;"
-            
+
             row_container.setStyleSheet(row_style)
 
             # Add the container to the main grid, spanning both columns
@@ -165,7 +167,7 @@ class ThinkFanUI(QApp_SysTrayIndicator):
 
             if not sErr:
                 lines = sOut.decode().strip().split("\n")
-                tempRE = re.compile(r"^(.*?):\s*\+?([^ ]+°C)")
+                tempRE = re.compile(r"^(.*?):\s*\+?([^ ]+Â°C)")
 
                 for line in lines:
                     match = tempRE.match(line)
@@ -251,6 +253,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(QMainWindow, self).__init__()
         self.app = app
         self.setupUi(self)
+        
+        # --- Add the Fan Curve Editor widget to its tab ---
+        self.curve_editor = FanCurveEditor(self)
+        self.curveEditorLayout = QVBoxLayout(self.tabCurveEditor)
+        self.curveEditorLayout.addWidget(self.curve_editor)
+        
         self.versionLabel.setText(f"v{APP_VERSION}")
 
         # --- MODIFIED: Setup mutually exclusive fan control buttons ---

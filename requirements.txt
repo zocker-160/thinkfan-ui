@@ -1,1 +1,3 @@
 PyQt6
+PyYAML
+pyqtgraph
