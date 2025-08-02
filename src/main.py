@@ -167,7 +167,7 @@ class ThinkFanUI(QApp_SysTrayIndicator):
 
             if not sErr:
                 lines = sOut.decode().strip().split("\n")
-                tempRE = re.compile(r"^(.*?):\s*\+?([^ ]+Â°C)")
+                tempRE = re.compile(r"^(.*?):\s*\+?([^ ]+°C)")
 
                 for line in lines:
                     match = tempRE.match(line)
