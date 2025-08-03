@@ -1,7 +1,11 @@
 import yaml
+import subprocess
+import os
+import sys # <-- IMPORT SYS MODULE
 from data_model import TempRange
 
 THINKFAN_CONF_PATH = "/etc/thinkfan.conf"
+HELPER_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "save_helper.py"))
 
 def load_curve_from_thinkfan():
     """
@@ -24,7 +28,6 @@ def load_curve_from_thinkfan():
             if isinstance(entry, list) and len(entry) == 3:
                 level, min_temp, max_temp = entry
                 
-                # --- CORRECTED MAPPING ---
                 if level == 127:
                     level = "Disengaged"
                 
@@ -36,7 +39,7 @@ def load_curve_from_thinkfan():
 def save_curve_to_thinkfan(temp_ranges):
     """
     Writes a list of TempRange objects to the 'levels' section
-    of /etc/thinkfan.conf, preserving the rest of the file.
+    of /etc/thinkfan.conf by calling a privileged helper script.
     """
     try:
         with open(THINKFAN_CONF_PATH, 'r') as f:
@@ -47,19 +50,26 @@ def save_curve_to_thinkfan(temp_ranges):
     new_levels = []
     for temp_range in temp_ranges:
         level = temp_range.level
-        # --- CORRECTED MAPPING ---
         if str(level) == 'Disengaged':
             level = 127
         
         new_levels.append([level, temp_range.min_temp, temp_range.max_temp])
 
     config['levels'] = new_levels
+    
+    yaml_content = yaml.dump(config, sort_keys=False, default_flow_style=False)
 
     try:
-        with open(THINKFAN_CONF_PATH, 'w') as f:
-            yaml.dump(config, f, sort_keys=False, default_flow_style=False)
-        print(f"Successfully saved levels to {THINKFAN_CONF_PATH}")
-        return True
+        command = ["pkexec", sys.executable, HELPER_PATH, THINKFAN_CONF_PATH, yaml_content]
+        result = subprocess.run(command, capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            print("Helper script executed successfully.")
+            return True
+        else:
+            print(f"Helper script failed: {result.stderr}")
+            return False
+
     except Exception as e:
-        print(f"Error writing to {THINKFAN_CONF_PATH}: {e}")
+        print(f"Error executing helper script: {e}")
         return False
