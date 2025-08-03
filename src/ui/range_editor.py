@@ -18,30 +18,30 @@ class TempRangeEditor(QWidget):
         self.layout = QGridLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
         
-        # Row 0: Min Temp, Max Temp, Remove Button
-        self.layout.addWidget(QLabel("Min Temp (°C):"), 0, 0)
-        self.min_temp_spinbox = QDoubleSpinBox()
-        self.min_temp_spinbox.setRange(30, 120)
-        self.min_temp_spinbox.setDecimals(0)
-        self.layout.addWidget(self.min_temp_spinbox, 0, 1)
-        
-        self.layout.addWidget(QLabel("Max Temp (°C):"), 0, 2)
-        self.max_temp_spinbox = QDoubleSpinBox()
-        self.max_temp_spinbox.setRange(30, 120)
-        self.max_temp_spinbox.setDecimals(0)
-        self.layout.addWidget(self.max_temp_spinbox, 0, 3)
+        # Row 0: Fan Level and Remove Button
+        self.layout.addWidget(QLabel("Fan Level:"), 0, 0)
+        self.level_combo = QComboBox()
+        self.valid_levels = ["auto"] + list(range(8)) + ["Disengaged"]
+        self.level_combo.addItems([str(lvl) for lvl in self.valid_levels])
+        self.layout.addWidget(self.level_combo, 0, 1, 1, 3)
 
         self.remove_button = QPushButton("X")
         self.remove_button.setFixedSize(QSize(28, 28))
         self.layout.addWidget(self.remove_button, 0, 4)
 
-        # Row 1: Fan Level
-        self.layout.addWidget(QLabel("Fan Level:"), 1, 0)
-        self.level_combo = QComboBox()
-        # --- REORDERED LIST HERE ---
-        self.valid_levels = ["auto"] + list(range(8)) + ["disengaged / full-speed"]
-        self.level_combo.addItems([str(lvl) for lvl in self.valid_levels])
-        self.layout.addWidget(self.level_combo, 1, 1, 1, 4)
+        # Row 1: Min Temp
+        self.layout.addWidget(QLabel("Min (°C):"), 1, 0)
+        self.min_temp_spinbox = QDoubleSpinBox()
+        self.min_temp_spinbox.setRange(0, 120)
+        self.min_temp_spinbox.setDecimals(0)
+        self.layout.addWidget(self.min_temp_spinbox, 1, 1, 1, 4)
+
+        # Row 2: Max Temp
+        self.layout.addWidget(QLabel("Max (°C):"), 2, 0)
+        self.max_temp_spinbox = QDoubleSpinBox()
+        self.max_temp_spinbox.setRange(0, 120)
+        self.max_temp_spinbox.setDecimals(0)
+        self.layout.addWidget(self.max_temp_spinbox, 2, 1, 1, 4)
 
         # Connect signals
         self.min_temp_spinbox.valueChanged.connect(self.ui_changed)
@@ -53,17 +53,18 @@ class TempRangeEditor(QWidget):
 
     def update_display(self):
         """ Populates the controls with the current range data. """
-        # Temporarily block signals to prevent recursive loops when setting values
+        # --- FIX: Block signals to prevent recursion ---
         self.min_temp_spinbox.blockSignals(True)
         self.max_temp_spinbox.blockSignals(True)
+        self.level_combo.blockSignals(True)
         
         self.min_temp_spinbox.setValue(self.range_data.min_temp)
         self.max_temp_spinbox.setValue(self.range_data.max_temp)
-        
+        self.level_combo.setCurrentText(str(self.range_data.level))
+
         self.min_temp_spinbox.blockSignals(False)
         self.max_temp_spinbox.blockSignals(False)
-        
-        self.level_combo.setCurrentText(str(self.range_data.level))
+        self.level_combo.blockSignals(False)
 
     def ui_changed(self):
         """ Called when the user finishes editing a value. """

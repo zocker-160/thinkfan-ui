@@ -24,7 +24,8 @@ from ui.gui import Ui_MainWindow
 from ui.systray import QApp_SysTrayIndicator
 from ui.curve_editor import FanCurveEditor
 from ui.range_controls import RangeControls
-from data_model import FanCurveModel # <-- IMPORT THE MODEL
+from data_model import FanCurveModel
+import backend # <-- IMPORT BACKEND
 from QSingleApplication import QSingleApplicationTCP
 
 APP_NAME = "ThinkFan UI"
@@ -56,10 +57,9 @@ class ThinkFanUI(QApp_SysTrayIndicator):
         self.app.setApplicationDisplayName(APP_NAME)
         self.app.setDesktopFileName(APP_DESKTOP_NAME)
 
-        # Create an instance of the data model
         self.fan_curve_model = FanCurveModel(self)
 
-        self.mainWindow = MainWindow(self, self.fan_curve_model) # Pass model to MainWindow
+        self.mainWindow = MainWindow(self, self.fan_curve_model)
         self.mainWindow.center()
         self.mainWindow._set_fan_mode_auto()
         self.app.onActivate.connect(self.mainWindow.appear)
@@ -213,25 +213,30 @@ class ThinkFanUI(QApp_SysTrayIndicator):
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
-    def __init__(self, app: ThinkFanUI, model: FanCurveModel): # <-- ACCEPT MODEL
+    def __init__(self, app: ThinkFanUI, model: FanCurveModel):
         super(QMainWindow, self).__init__()
         self.app = app
-        self.model = model # <-- STORE MODEL
+        self.model = model
         self.setupUi(self)
         
-        # Pass the model to the UI components
         self.curve_editor = FanCurveEditor(self.model, self)
         self.controls_pane = RangeControls(self.model, self)
+        
+        self.controls_pane.setMinimumWidth(300)
 
         splitter = QSplitter(self)
         splitter.addWidget(self.curve_editor)
         splitter.addWidget(self.controls_pane)
-        splitter.setSizes([750, 250])
+        splitter.setSizes([700, 300])
 
         self.curveEditorLayout = QVBoxLayout(self.tabCurveEditor)
         self.curveEditorLayout.addWidget(splitter)
         
         self.versionLabel.setText(f"v{APP_VERSION}")
+
+        # --- Connect Save/Load buttons to backend logic ---
+        self.controls_pane.load_button.clicked.connect(self.load_curve)
+        self.controls_pane.save_button.clicked.connect(self.save_curve)
 
         self.button_auto.setCheckable(True)
         self.button_full.setCheckable(True)
@@ -256,6 +261,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionGitHub.triggered.connect(openGitHub)
         self.actionAbout.triggered.connect(self.showAbout)
         self.actionAbout_Qt.triggered.connect(lambda: QMessageBox.aboutQt(self))
+        
+        self.resize(self.sizeHint())
+
+    def load_curve(self):
+        """ Handles the Load button click. """
+        print("Loading curve from thinkfan.conf...")
+        new_ranges = backend.load_curve_from_thinkfan()
+        if new_ranges:
+            self.model.set_new_ranges(new_ranges)
+            QMessageBox.information(self, "Success", "Successfully loaded curve from /etc/thinkfan.conf")
+        else:
+            QMessageBox.warning(self, "Warning", "Could not load levels from /etc/thinkfan.conf. Check logs for details.")
+
+    def save_curve(self):
+        """ Handles the Save button click. """
+        print("Saving curve to thinkfan.conf...")
+        # A real app would ask for pkexec/sudo password here
+        if backend.save_curve_to_thinkfan(self.model.get_ranges()):
+            QMessageBox.information(self, "Success", "Successfully saved curve to /etc/thinkfan.conf.\nRestart thinkfan service to apply changes.")
+        else:
+            QMessageBox.critical(self, "Error", "Failed to save to /etc/thinkfan.conf. Run the app with sudo or check file permissions.")
 
     def _set_fan_mode_auto(self):
         self.app.setFanSpeed("auto")
@@ -320,11 +346,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 def updatePermissions():
     try:
         command = ["pkexec", "chown", os.getlogin(), PROC_FAN]
-        result = subprocess.run(command)
+        subprocess.run(command)
     except OSError:
         command = ["pkexec", "chmod", "777", PROC_FAN]
-        result = subprocess.run(command)
-    print(f"Permission update exited with code: {result.returncode}")
+        subprocess.run(command)
 
 def checkPermissions() -> bool:
     if not os.path.isfile(PROC_FAN):

@@ -78,7 +78,7 @@ class FanCurveScene(QGraphicsScene):
         self.scene_width = 1000
         self.scene_height = 1000
         
-        self.data_x_min, self.data_x_max = 30, 120 # CORRECTED: Set max temp to 120
+        self.data_x_min, self.data_x_max = 0, 120 # CORRECTED: Start X-axis at 0
         self.data_y_min, self.data_y_max = 0, 120
         
         self.draw_chart_area()
@@ -91,12 +91,12 @@ class FanCurveScene(QGraphicsScene):
         self.update_view_from_model()
 
     def level_to_y_percent(self, level):
-        if str(level) == "disengaged / full-speed": return 120
+        if str(level) == "Disengaged": return 120
         if str(level) == "auto": return 50
         return (int(level) / 7.0) * 100
 
     def map_y_percent_to_level(self, y_percent):
-        if y_percent >= 110: return 'disengaged / full-speed'
+        if y_percent >= 110: return 'Disengaged'
         level = round((y_percent / 100) * 7)
         return min(int(level), 7)
 

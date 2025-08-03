@@ -3,10 +3,12 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QGroupBox,
     QPushButton,
-    QScrollArea
+    QScrollArea,
+    QHBoxLayout,
+    QFrame
 )
 from PyQt6.QtCore import Qt
-from .range_editor import TempRangeEditor # Import the new class name
+from .range_editor import TempRangeEditor
 
 class RangeControls(QWidget):
     def __init__(self, model, parent=None):
@@ -15,11 +17,13 @@ class RangeControls(QWidget):
         self.range_editors = []
 
         self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setContentsMargins(5, 5, 5, 5) # Add some margins
         
-        self.add_button = QPushButton("Add New Range") # Updated text
+        # --- Top Buttons ---
+        self.add_button = QPushButton("Add New Range")
         self.main_layout.addWidget(self.add_button)
         
+        # --- Scroll Area for Editors ---
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -28,27 +32,37 @@ class RangeControls(QWidget):
         self.scroll_content = QWidget()
         self.list_layout = QVBoxLayout(self.scroll_content)
         self.list_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        
         scroll_area.setWidget(self.scroll_content)
+        
+        # --- Bottom Buttons (Save/Load) ---
+        line = QFrame()
+        line.setFrameShape(QFrame.Shape.HLine)
+        line.setFrameShadow(QFrame.Shadow.Sunken)
+        self.main_layout.addWidget(line)
 
-        self.add_button.clicked.connect(self.model.add_range) # Connect to the new method
+        button_layout = QHBoxLayout()
+        self.load_button = QPushButton("Load")
+        self.save_button = QPushButton("Save")
+        button_layout.addWidget(self.load_button)
+        button_layout.addWidget(self.save_button)
+        self.main_layout.addLayout(button_layout)
+        
+        # --- Connections ---
+        self.add_button.clicked.connect(self.model.add_range)
         self.model.modelChanged.connect(self.rebuild_view)
         self.rebuild_view()
 
     def rebuild_view(self):
-        # Clear old editor widgets
         while self.list_layout.count():
             child = self.list_layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
         self.range_editors.clear()
         
-        # Create a new editor widget for each range in the model
         for range_data in self.model.get_ranges():
-            # Using a simple QGroupBox for now. Can be customized later.
             group = QGroupBox()
             editor_layout = QVBoxLayout(group)
-            editor = TempRangeEditor(self.model, range_data) # Use the new editor
+            editor = TempRangeEditor(self.model, range_data)
             editor_layout.addWidget(editor)
             
             self.list_layout.addWidget(group)
