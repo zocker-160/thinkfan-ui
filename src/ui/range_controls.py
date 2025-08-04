@@ -17,11 +17,15 @@ class RangeControls(QWidget):
         self.range_editors = []
 
         self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(5, 5, 5, 5) # Add some margins
+        self.main_layout.setContentsMargins(5, 5, 5, 5)
         
-        # --- Top Buttons ---
+        # --- Top Buttons in a horizontal layout ---
+        top_button_layout = QHBoxLayout()
         self.add_button = QPushButton("Add New Range")
-        self.main_layout.addWidget(self.add_button)
+        self.generate_button = QPushButton("Generate Conf") # New Button
+        top_button_layout.addWidget(self.add_button)
+        top_button_layout.addWidget(self.generate_button)
+        self.main_layout.addLayout(top_button_layout)
         
         # --- Scroll Area for Editors ---
         scroll_area = QScrollArea()
@@ -40,12 +44,12 @@ class RangeControls(QWidget):
         line.setFrameShadow(QFrame.Shadow.Sunken)
         self.main_layout.addWidget(line)
 
-        button_layout = QHBoxLayout()
+        bottom_button_layout = QHBoxLayout()
         self.load_button = QPushButton("Load")
         self.save_button = QPushButton("Save")
-        button_layout.addWidget(self.load_button)
-        button_layout.addWidget(self.save_button)
-        self.main_layout.addLayout(button_layout)
+        bottom_button_layout.addWidget(self.load_button)
+        bottom_button_layout.addWidget(self.save_button)
+        self.main_layout.addLayout(bottom_button_layout)
         
         # --- Connections ---
         self.add_button.clicked.connect(self.model.add_range)

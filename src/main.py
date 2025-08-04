@@ -5,36 +5,27 @@ import sys
 import subprocess
 import re
 
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QPalette
 from PyQt6.QtWidgets import (
-    QMainWindow,
-    QMessageBox,
-    QWidget,
-    QLabel,
-    QHBoxLayout,
-    QSpacerItem,
-    QSizePolicy,
-    QButtonGroup,
-    QVBoxLayout,
-    QSplitter
+    QMainWindow, QMessageBox, QWidget, QLabel, QHBoxLayout, 
+    QSpacerItem, QSizePolicy, QButtonGroup, QVBoxLayout, QSplitter
 )
 
 from ui.gui import Ui_MainWindow
 from ui.systray import QApp_SysTrayIndicator
 from ui.curve_editor import FanCurveEditor
 from ui.range_controls import RangeControls
+from ui.generation_wizard import GenerationWizard
 from data_model import FanCurveModel
-import backend # <-- IMPORT BACKEND
+import backend
 from QSingleApplication import QSingleApplicationTCP
 
 APP_NAME = "ThinkFan UI"
 APP_VERSION = "1.0.0"
 APP_DESKTOP_NAME = "thinkfan-ui"
 APP_UUID = "587dedfb-19f2-4b2a-bc74-3d656e80966a"
-
 GITHUB_URL = "https://github.com/zocker-160/thinkfan-ui"
-
 PROC_FAN = "/proc/acpi/ibm/fan"
 
 SENSOR_TOOLTIPS = {
@@ -47,7 +38,6 @@ SENSOR_TOOLTIPS = {
 }
 
 class ThinkFanUI(QApp_SysTrayIndicator):
-
     def __init__(self, app: QSingleApplicationTCP, argv):
         super().__init__()
 
@@ -141,7 +131,7 @@ class ThinkFanUI(QApp_SysTrayIndicator):
         temps = {}
         allowed_keywords = ["cpu", "gpu"]
         try:
-            proc = subprocess.Popen(["sensors", "thinkpad-isa-0000"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc = subprocess.Popen(["sensors"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             sOut, sErr = proc.communicate(timeout=2)
             if not sErr:
                 lines = sOut.decode().strip().split("\n")
@@ -179,7 +169,7 @@ class ThinkFanUI(QApp_SysTrayIndicator):
         except Exception as e:
             fan_data["Error"] = str(e)
         try:
-            proc = subprocess.Popen(["sensors", "thinkpad-isa-0000"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc = subprocess.Popen(["sensors"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             sOut, sErr = proc.communicate(timeout=2)
             if not sErr:
                 lines = sOut.decode().strip().split("\n")
@@ -221,22 +211,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.curve_editor = FanCurveEditor(self.model, self)
         self.controls_pane = RangeControls(self.model, self)
-        
         self.controls_pane.setMinimumWidth(300)
-
         splitter = QSplitter(self)
         splitter.addWidget(self.curve_editor)
         splitter.addWidget(self.controls_pane)
         splitter.setSizes([700, 300])
-
         self.curveEditorLayout = QVBoxLayout(self.tabCurveEditor)
         self.curveEditorLayout.addWidget(splitter)
         
         self.versionLabel.setText(f"v{APP_VERSION}")
 
-        # --- Connect Save/Load buttons to backend logic ---
         self.controls_pane.load_button.clicked.connect(self.load_curve)
         self.controls_pane.save_button.clicked.connect(self.save_curve)
+        self.controls_pane.generate_button.clicked.connect(self.show_generation_wizard)
 
         self.button_auto.setCheckable(True)
         self.button_full.setCheckable(True)
@@ -263,9 +250,38 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionAbout_Qt.triggered.connect(lambda: QMessageBox.aboutQt(self))
         
         self.resize(self.sizeHint())
+        
+        self._curve_editor_first_load = True
+        self.tabWidget.currentChanged.connect(self.on_tab_changed)
+
+    def on_tab_changed(self, index):
+        if self.tabWidget.widget(index) is self.tabCurveEditor:
+            if self._curve_editor_first_load:
+                self._curve_editor_first_load = False
+                if not os.path.exists(backend.THINKFAN_CONF_PATH):
+                    reply = QMessageBox.question(self, "thinkfan-ui", 
+                                                 "No thinkfan configuration found.\nWould you like to generate one now?",
+                                                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                                 QMessageBox.StandardButton.No)
+                    if reply == QMessageBox.StandardButton.Yes:
+                        self.show_generation_wizard()
+
+    def show_generation_wizard(self):
+        all_sensors = backend.discover_sensors()
+        if not all_sensors:
+            QMessageBox.critical(self, "Error", "Could not find any temperature sensors. Please ensure 'lm-sensors' is installed.")
+            return
+
+        wizard = GenerationWizard(all_sensors, self)
+        if wizard.exec():
+            selection = wizard.get_selection()
+            if selection:
+                print("Wizard finished. User selected:")
+                print("  Selected:", selection["selected_sensors"])
+                print("  Primary:", selection["primary_sensor"])
+                # Config generation logic will be added here
 
     def load_curve(self):
-        """ Handles the Load button click. """
         print("Loading curve from thinkfan.conf...")
         new_ranges = backend.load_curve_from_thinkfan()
         if new_ranges:
@@ -275,9 +291,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, "Warning", "Could not load levels from /etc/thinkfan.conf. Check logs for details.")
 
     def save_curve(self):
-        """ Handles the Save button click. """
         print("Saving curve to thinkfan.conf...")
-        # A real app would ask for pkexec/sudo password here
         if backend.save_curve_to_thinkfan(self.model.get_ranges()):
             QMessageBox.information(self, "Success", "Successfully saved curve to /etc/thinkfan.conf.\nRestart thinkfan service to apply changes.")
         else:
