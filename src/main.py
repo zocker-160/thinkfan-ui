@@ -17,7 +17,7 @@ from ui.systray import QApp_SysTrayIndicator
 from ui.curve_editor import FanCurveEditor
 from ui.range_controls import RangeControls
 from ui.generation_wizard import GenerationWizard
-from ui.config_preview_dialog import ConfigPreviewDialog  # <-- New Import
+from ui.config_preview_dialog import ConfigPreviewDialog
 from data_model import FanCurveModel
 import backend
 from QSingleApplication import QSingleApplicationTCP
@@ -136,7 +136,6 @@ class ThinkFanUI(QApp_SysTrayIndicator):
             sOut, sErr = proc.communicate(timeout=2)
             if not sErr:
                 lines = sOut.decode().strip().split("\n")
-                # Corrected regex to prevent reintroducing BUG-005
                 tempRE = re.compile(r"^(.*?):\s*\+?([^ ]+°C)")
                 for line in lines:
                     match = tempRE.match(line)
@@ -278,16 +277,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if wizard.exec():
             selection = wizard.get_selection()
             if selection:
-                # 1. Generate the config content from the selection.
                 config_content = backend.generate_config_content(selection)
-
-                # 2. Show the preview dialog and wait for user confirmation.
                 preview_dialog = ConfigPreviewDialog(config_content, self)
-                if preview_dialog.exec():  # This is true if the user clicks "Save"
-                    # 3. If confirmed, save the content to the config file.
+                if preview_dialog.exec():
                     success = backend.save_content_to_thinkfan(config_content)
-
-                    # 4. Inform the user and reload the curve into the UI.
                     if success:
                         QMessageBox.information(self, "Success",
                                                 "thinkfan.conf has been generated and saved.\n"
@@ -300,16 +293,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def load_curve(self):
         print("Loading curve from thinkfan.conf...")
-        new_ranges = backend.load_curve_from_thinkfan()
-        if new_ranges:
-            self.model.set_new_ranges(new_ranges)
-            QMessageBox.information(self, "Success", "Successfully loaded curve from /etc/thinkfan.conf")
+        new_curves = backend.load_curve_from_thinkfan()
+        if new_curves:
+            self.model.set_curves(new_curves)
+            QMessageBox.information(self, "Success", "Successfully loaded curves from /etc/thinkfan.conf")
         else:
-            QMessageBox.warning(self, "Warning", "Could not load levels from /etc/thinkfan.conf. Check logs for details.")
+            QMessageBox.warning(self, "Warning", "Could not load curves from /etc/thinkfan.conf. Check logs for details.")
 
     def save_curve(self):
         print("Saving curve to thinkfan.conf...")
-        if backend.save_curve_to_thinkfan(self.model.get_ranges()):
+        if backend.save_curve_to_thinkfan(self.model.get_all_curves()):
             QMessageBox.information(self, "Success", "Successfully saved curve to /etc/thinkfan.conf.\nRestart thinkfan service to apply changes.")
         else:
             QMessageBox.critical(self, "Error", "Failed to save to /etc/thinkfan.conf. Run the app with sudo or check file permissions.")

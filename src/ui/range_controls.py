@@ -5,7 +5,9 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QHBoxLayout,
-    QFrame
+    QFrame,
+    QComboBox,
+    QLabel
 )
 from PyQt6.QtCore import Qt
 from .range_editor import TempRangeEditor
@@ -19,10 +21,17 @@ class RangeControls(QWidget):
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(5, 5, 5, 5)
         
+        # --- Curve Selector ComboBox ---
+        selector_layout = QHBoxLayout()
+        selector_layout.addWidget(QLabel("Editing Curve for:"))
+        self.curve_selector = QComboBox()
+        selector_layout.addWidget(self.curve_selector)
+        self.main_layout.addLayout(selector_layout)
+
         # --- Top Buttons in a horizontal layout ---
         top_button_layout = QHBoxLayout()
         self.add_button = QPushButton("Add New Range")
-        self.generate_button = QPushButton("Generate Conf") # New Button
+        self.generate_button = QPushButton("Generate Conf")
         top_button_layout.addWidget(self.add_button)
         top_button_layout.addWidget(self.generate_button)
         self.main_layout.addLayout(top_button_layout)
@@ -54,9 +63,22 @@ class RangeControls(QWidget):
         # --- Connections ---
         self.add_button.clicked.connect(self.model.add_range)
         self.model.modelChanged.connect(self.rebuild_view)
+        self.curve_selector.currentTextChanged.connect(self._on_curve_selected)
         self.rebuild_view()
 
+    def _on_curve_selected(self, key):
+        if key:
+            self.model.set_active_curve(key)
+
     def rebuild_view(self):
+        # --- Update ComboBox ---
+        self.curve_selector.blockSignals(True)
+        self.curve_selector.clear()
+        self.curve_selector.addItems(self.model.get_curve_keys())
+        self.curve_selector.setCurrentText(self.model.get_active_curve_key())
+        self.curve_selector.blockSignals(False)
+
+        # --- Rebuild Range Editors for the active curve ---
         while self.list_layout.count():
             child = self.list_layout.takeAt(0)
             if child.widget():
