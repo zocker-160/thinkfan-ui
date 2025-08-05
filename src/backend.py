@@ -75,22 +75,34 @@ def generate_config_content(selected_sensors):
     # --- Sensors Section ---
     output_str += "sensors:\n"
 
-    # Group selected sensors by their device name to create clean blocks
+    # --- MODIFICATION START ---
+    # Group full sensor objects by their device name, not just indices
     sensor_groups = {}
     for sensor in selected_sensors:
         device_name = sensor['device']
         if device_name not in sensor_groups:
             sensor_groups[device_name] = []
-        sensor_groups[device_name].append(sensor['index'])
+        sensor_groups[device_name].append(sensor)
 
-    for device, indices in sensor_groups.items():
-        indices.sort()
+    for device, sensors_in_group in sensor_groups.items():
+        # Extract and sort indices for the 'indices' list
+        indices = sorted([s['index'] for s in sensors_in_group])
+        
         output_str += f"  - hwmon: /sys/class/hwmon\n"
         output_str += f"    name: {device}\n"
         output_str += f"    indices: {str(indices)}\n"
 
+        # Add the mapping comments
+        output_str += f"    # Mappings for {device}:\n"
+        # Sort sensors by index for clean, ordered comments
+        sorted_sensors_in_group = sorted(sensors_in_group, key=lambda s: s['index'])
+        for sensor in sorted_sensors_in_group:
+            output_str += f"    #   {sensor['index']}: {sensor['label']}\n"
+        output_str += "\n"
+    # --- MODIFICATION END ---
+
     # --- Levels Section (Conditional Syntax) ---
-    output_str += "\nlevels:\n"
+    output_str += "levels:\n"
 
     default_levels = [
         [0, 0, 55],
