@@ -47,6 +47,86 @@ AUR: [thinkfan-ui](https://aur.archlinux.org/packages/thinkfan-ui/)
 - Clone this repository and navigate to the `src` folder
 - Run `python3 main.py`
 
+# Thinkfan Conf 
+### Simple vs Detailed syntax logic
+
+1. `generated_simple.conf` (_Simple Syntax_)
+``` c# 
+fans:
+  - tpacpi: /proc/acpi/ibm/fan
+
+sensors:
+  - hwmon: /sys/class/hwmon
+    name: thinkpad
+    indices: [1, 2]
+    # Mappings for thinkpad:
+    #   1: CPU
+    #   2: GPU
+
+  - hwmon: /sys/class/hwmon
+    name: coretemp
+    indices: [1]
+    # Mappings for coretemp:
+    #   1: Package id 0
+
+levels:
+  - [0, 0, 50]
+  - [1, 45, 55]
+  - [2, 50, 60]
+  - [3, 55, 65]
+  - [4, 60, 70]
+  - [5, 65, 75]
+  - [6, 70, 80]
+  - [7, 75, 85]
+  # Using 127, the verified numerical equivalent for "full-speed".
+  - [127, 80, 100]
+```
+- **Logic**: The fan speed is controlled by the single hottest sensor.
+
+- **Scenario**: If the `thinkpad CPU` sensor is at **78°C** and all other sensors are at **50°C**, thinkfan will use **78°C** as its only reference. The fan will be set to **level 7**, ignoring the cooler sensors completely.
+
+2. `generated_detailed.conf` (_Detailed Syntax_)
+``` c
+fans:
+  - tpacpi: /proc/acpi/ibm/fan
+
+sensors:
+  - hwmon: /sys/class/hwmon
+    name: thinkpad
+    indices: [1, 2]
+    # Mappings for thinkpad:
+    #   1: CPU
+    #   2: GPU
+
+  - hwmon: /sys/class/hwmon
+    name: coretemp
+    indices: [1]
+    # Mappings for coretemp:
+    #   1: Package id 0
+
+levels:
+  - speed: 0
+    lower_limit: [0, 0, 0]
+    upper_limit: [55, 55, 55]
+  - speed: 2
+    lower_limit: [50, 50, 50]
+    upper_limit: [65, 65, 65]
+  - speed: 4
+    lower_limit: [60, 60, 60]
+    upper_limit: [75, 75, 75]
+  - speed: 7
+    lower_limit: [70, 70, 70]
+    upper_limit: [85, 85, 85]
+  - speed: 127
+    lower_limit: [80, 80, 80]
+    upper_limit: [100, 100, 100]
+
+```
+
+- **Logic**: To increase fan speed, all three sensors must agree by crossing their individual temperature thresholds for the next level.
+
+- **Scenario**: If the `coretemp` sensor is at **62°C** but the `thinkpad GPU` is at **58°C**, the fan will not speed up to a level that requires all sensors to be above **60°C**. The cooler `GPU` prevents the fan from speeding up.
+
 ---
 
 Note: You are required to have the Linux kernel with `thinkpad-acpi` patch. (Ubuntu, Solus and a few others already seem to have this)
