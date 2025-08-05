@@ -117,8 +117,7 @@ def generate_config_content(selected_sensors):
 def load_curve_from_thinkfan():
     """
     Reads /etc/thinkfan.conf and returns a dictionary where keys are sensor
-    names/groups and values are their corresponding fan curves (lists of TempRange).
-    Supports both simple and detailed syntax.
+    labels (e.g. "CPU", "GPU") and values are their corresponding fan curves.
     """
     try:
         with open(THINKFAN_CONF_PATH, 'r') as f:
@@ -130,59 +129,60 @@ def load_curve_from_thinkfan():
     if not isinstance(config, dict) or 'sensors' not in config or 'levels' not in config:
         return {}
 
+    # Get a fresh map of all sensor labels on the system
+    system_sensors = discover_sensors()
+    # Create a lookup table: (device_name, index) -> label
+    label_lookup = {(s['device'], s['index']): s['label'] for s in system_sensors}
+
+    # Build an ordered map of sensors as defined in the config file
     sensor_map = []
-    sensor_names = []
     for sensor_block in config.get('sensors', []):
         if isinstance(sensor_block, dict) and 'name' in sensor_block and 'indices' in sensor_block:
             name = sensor_block['name']
-            if name not in sensor_names:
-                sensor_names.append(name)
             for index in sensor_block['indices']:
-                sensor_map.append({'name': name, 'index': index})
+                # Find the label for this sensor from our system-wide lookup
+                label = label_lookup.get((name, index), f"{name}-idx{index}")
+                sensor_map.append({'name': name, 'index': index, 'label': label})
 
-    if not sensor_map:
-        return {}
+    if not sensor_map: return {}
 
     curves = {}
     levels_data = config.get('levels', [])
-    if not levels_data:
-        return {}
+    if not levels_data: return {}
 
     first_level_entry = levels_data[0]
 
+    # Handle Simple Syntax
     if isinstance(first_level_entry, list):
-        curve_key = "+".join(sensor_names) if sensor_names else "All Sensors"
+        # In simple mode, there is one curve. We'll use the first sensor's label as the key.
+        curve_key = sensor_map[0]['label']
         curves[curve_key] = []
         for entry in levels_data:
             if isinstance(entry, list) and len(entry) == 3:
                 level, min_temp, max_temp = entry
-                if level == 127:
-                    level = "Disengaged"
+                level = "Disengaged" if level == 127 else level
                 curves[curve_key].append(TempRange(min_temp=min_temp, max_temp=max_temp, level=level))
 
+    # Handle Detailed Syntax
     elif isinstance(first_level_entry, dict):
-        for name in sensor_names:
-            curves[name] = []
+        # Initialize a curve list for each unique sensor label
+        for sensor in sensor_map:
+            if sensor['label'] not in curves:
+                curves[sensor['label']] = []
 
         for level_entry in levels_data:
             if not all(k in level_entry for k in ['speed', 'lower_limit', 'upper_limit']):
                 continue
-
+            
             level = level_entry['speed']
-            if level == 127:
-                level = "Disengaged"
+            level = "Disengaged" if level == 127 else level
 
-            processed_sensors_for_this_level = set()
             for i, sensor_info in enumerate(sensor_map):
-                sensor_name = sensor_info['name']
-                if sensor_name in processed_sensors_for_this_level:
-                    continue
-
                 try:
+                    label = sensor_info['label']
                     min_temp = level_entry['lower_limit'][i]
                     max_temp = level_entry['upper_limit'][i]
-                    curves[sensor_name].append(TempRange(min_temp=min_temp, max_temp=max_temp, level=level))
-                    processed_sensors_for_this_level.add(sensor_name)
+                    curves[label].append(TempRange(min_temp=min_temp, max_temp=max_temp, level=level))
                 except (IndexError, TypeError):
                     continue
     
@@ -190,37 +190,41 @@ def load_curve_from_thinkfan():
 
 def save_curve_to_thinkfan(curves_dict):
     """
-    Writes a dictionary of curves to /etc/thinkfan.conf using detailed syntax.
+    Writes a dictionary of curves (keyed by sensor label) to /etc/thinkfan.conf
+    using the detailed syntax.
     """
     header_lines = []
-    sensor_map = []
+    config_sensors = [] # Store the structured sensor data from the file
     
     try:
         with open(THINKFAN_CONF_PATH, 'r') as f:
-            current_section = None
-            for line in f:
-                stripped_line = line.strip()
-                if stripped_line.startswith('sensors:'):
-                    current_section = 'sensors'
-                elif stripped_line.startswith('levels:'):
-                    break
-                
-                header_lines.append(line)
-                
-                if current_section == 'sensors' and stripped_line.startswith('name:'):
-                    name = stripped_line.split(':')[1].strip()
-                if current_section == 'sensors' and stripped_line.startswith('indices:'):
-                    indices_str = stripped_line.split(':')[1].strip()
-                    indices = yaml.safe_load(indices_str)
-                    for index in indices:
-                        sensor_map.append({'name': name, 'index': index})
+            content = f.read()
+            config = yaml.safe_load(content)
+            config_sensors = config.get('sensors', [])
+            
+            # Read the file content up to the 'levels:' section to preserve it
+            header_lines = content.split('levels:')[0]
 
-    except FileNotFoundError:
-        return False
+    except (FileNotFoundError, Exception):
+        return False # Cannot save if we can't read the sensor layout
 
-    final_content = "".join(header_lines).strip() + "\n\nlevels:\n"
+    # Build an ordered map of every sensor input from the file
+    sensor_map = []
+    for sensor_block in config_sensors:
+        name = sensor_block.get('name')
+        indices = sensor_block.get('indices', [])
+        for index in indices:
+            sensor_map.append({'name': name, 'index': index})
+
+    # Get a system-wide lookup for labels to find the label for each sensor in the map
+    system_sensors = discover_sensors()
+    label_lookup = {(s['device'], s['index']): s['label'] for s in system_sensors}
+    for sensor in sensor_map:
+        sensor['label'] = label_lookup.get((sensor['name'], sensor['index']), f"{sensor['name']}-idx{sensor['index']}")
+
+    # --- Build the new 'levels' section ---
+    final_content = header_lines.strip() + "\n\nlevels:\n"
     
-    # Get a sorted list of unique levels from all curves
     all_levels = set()
     for curve in curves_dict.values():
         for temp_range in curve:
@@ -236,16 +240,16 @@ def save_curve_to_thinkfan(curves_dict):
         upper_limits = []
         
         for sensor in sensor_map:
-            sensor_name = sensor['name']
-            curve = curves_dict.get(sensor_name, [])
-            
+            label = sensor['label']
+            curve = curves_dict.get(label, [])
             found_range = next((r for r in curve if r.level == level), None)
             
             if found_range:
                 lower_limits.append(found_range.min_temp)
                 upper_limits.append(found_range.max_temp)
             else:
-                # Fallback if a level is missing for a sensor
+                # Fallback: if a sensor doesn't have a rule for a specific level,
+                # give it a non-interfering wide range.
                 lower_limits.append(0)
                 upper_limits.append(120)
 

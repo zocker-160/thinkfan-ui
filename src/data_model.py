@@ -29,7 +29,7 @@ class FanCurveModel(QObject):
         self.create_default_curve()
 
     def create_default_curve(self):
-        """ Creates a default single fan curve for 'cpu'. """
+        """ Creates a default single fan curve. """
         default_ranges = [
             TempRange(min_temp=0, max_temp=55, level=0),
             TempRange(min_temp=50, max_temp=65, level=2),
@@ -37,8 +37,8 @@ class FanCurveModel(QObject):
             TempRange(min_temp=70, max_temp=85, level=7),
             TempRange(min_temp=80, max_temp=120, level='Disengaged'),
         ]
-        self._curves = {"cpu": default_ranges}
-        self._active_curve_key = "cpu"
+        self._curves = {"Default": default_ranges}
+        self._active_curve_key = "Default"
         self.modelChanged.emit()
 
     def get_ranges(self):
