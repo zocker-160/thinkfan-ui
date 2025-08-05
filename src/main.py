@@ -8,7 +8,7 @@ import re
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QPalette
 from PyQt6.QtWidgets import (
-    QMainWindow, QMessageBox, QWidget, QLabel, QHBoxLayout, 
+    QMainWindow, QMessageBox, QWidget, QLabel, QHBoxLayout,
     QSpacerItem, QSizePolicy, QButtonGroup, QVBoxLayout, QSplitter
 )
 
@@ -17,6 +17,7 @@ from ui.systray import QApp_SysTrayIndicator
 from ui.curve_editor import FanCurveEditor
 from ui.range_controls import RangeControls
 from ui.generation_wizard import GenerationWizard
+from ui.config_preview_dialog import ConfigPreviewDialog  # <-- New Import
 from data_model import FanCurveModel
 import backend
 from QSingleApplication import QSingleApplicationTCP
@@ -135,6 +136,7 @@ class ThinkFanUI(QApp_SysTrayIndicator):
             sOut, sErr = proc.communicate(timeout=2)
             if not sErr:
                 lines = sOut.decode().strip().split("\n")
+                # Corrected regex to prevent reintroducing BUG-005
                 tempRE = re.compile(r"^(.*?):\s*\+?([^ ]+°C)")
                 for line in lines:
                     match = tempRE.match(line)
@@ -198,7 +200,7 @@ class ThinkFanUI(QApp_SysTrayIndicator):
             self.mainWindow.showErrorMSG(f"{PROC_FAN} does not exist!")
         except OSError:
             self.mainWindow.showErrorMSG(
-                f"\"thinkpad_acpi\" does not seem to be set up correctly!",
+                "\"thinkpad_acpi\" does not seem to be set up correctly!",
                 detail="Please check that /etc/modprobe.d/thinkpad_acpi.conf contains \"options thinkpad_acpi fan_control=1\"")
 
 
@@ -276,10 +278,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if wizard.exec():
             selection = wizard.get_selection()
             if selection:
-                print("Wizard finished. User selected:")
-                print("  Selected:", selection["selected_sensors"])
-                print("  Primary:", selection["primary_sensor"])
-                # Config generation logic will be added here
+                # 1. Generate the config content from the selection.
+                config_content = backend.generate_config_content(selection)
+
+                # 2. Show the preview dialog and wait for user confirmation.
+                preview_dialog = ConfigPreviewDialog(config_content, self)
+                if preview_dialog.exec():  # This is true if the user clicks "Save"
+                    # 3. If confirmed, save the content to the config file.
+                    success = backend.save_content_to_thinkfan(config_content)
+
+                    # 4. Inform the user and reload the curve into the UI.
+                    if success:
+                        QMessageBox.information(self, "Success",
+                                                "thinkfan.conf has been generated and saved.\n"
+                                                "Loading the new curve now.")
+                        self.load_curve()
+                    else:
+                        QMessageBox.critical(self, "Error",
+                                             "Failed to save the new thinkfan.conf. "
+                                             "Check logs for details.")
 
     def load_curve(self):
         print("Loading curve from thinkfan.conf...")
