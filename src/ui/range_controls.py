@@ -31,7 +31,9 @@ class RangeControls(QWidget):
         # --- Top Buttons in a horizontal layout ---
         top_button_layout = QHBoxLayout()
         self.add_button = QPushButton("Add New Range")
+        self.add_button.setToolTip("Add a new temperature/fan level entry to the current curve.")
         self.generate_button = QPushButton("Generate Conf")
+        self.generate_button.setToolTip("Open a wizard to generate a new thinkfan.conf from scratch.")
         top_button_layout.addWidget(self.add_button)
         top_button_layout.addWidget(self.generate_button)
         self.main_layout.addLayout(top_button_layout)
@@ -55,7 +57,9 @@ class RangeControls(QWidget):
 
         bottom_button_layout = QHBoxLayout()
         self.load_button = QPushButton("Load")
+        self.load_button.setToolTip("Load the fan curve(s) from /etc/thinkfan.conf.")
         self.save_button = QPushButton("Save")
+        self.save_button.setToolTip("Save all currently defined curves to /etc/thinkfan.conf.")
         bottom_button_layout.addWidget(self.load_button)
         bottom_button_layout.addWidget(self.save_button)
         self.main_layout.addLayout(bottom_button_layout)
