@@ -6,7 +6,7 @@ it can also monitor CPU temp and fan RPM.
 ![Screenshot](images/screenshot_PyQt6_Curve-Editor.png)
 ![Screenshot](images/Curve-Editor_conf-gen.gif)
 
-This is a complete rewrite of the rpevious code using **PyQt6**.
+This is a complete rewrite of the previous code using **PyQt6**.
 
 It is written for **Linux only**. For Windows, see [speedfan](http://www.almico.com/speedfan.php).
 
