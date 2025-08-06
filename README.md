@@ -3,9 +3,10 @@
 Small and simple application for controlling fan speed on IBM/Lenovo ThinkPads,
 it can also monitor CPU temp and fan RPM.
 
-![Screenshot](images/screenshot_PyQt6.png)
+![Screenshot](images/screenshot_PyQt6_Curve-Editor.png)
+![Screenshot](images/Curve-Editor_conf-gen.gif)
 
-This is a complete rewrite of [scientifichackers/thinkfan-control-gui](https://github.com/scientifichackers/thinkfan-control-gui) using ~~PyQt5~~ **PyQt6**.
+This is a complete rewrite of the rpevious code using **PyQt6**.
 
 It is written for **Linux only**. For Windows, see [speedfan](http://www.almico.com/speedfan.php).
 
@@ -22,10 +23,10 @@ It is written for **Linux only**. For Windows, see [speedfan](http://www.almico.
 ## Dependencies
 
 ### Debian / Ubuntu
-`sudo apt install lm-sensors policykit-1 python3 python3-pyqt6`
+`sudo apt install lm-sensors policykit-1 python3 python3-pyqt6 python3-yaml`
 
 ### Fedora
-`sudo dnf install lm_sensors polkit python3 python3-pyqt6`
+`sudo dnf install lm_sensors polkit python3 python3-pyqt6 python3-pyyaml`
 
 ## Install
 
