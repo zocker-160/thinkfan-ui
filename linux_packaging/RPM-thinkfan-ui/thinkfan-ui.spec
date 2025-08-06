@@ -14,6 +14,7 @@ BuildArch:  noarch
 
 Requires:   python3
 Requires:   python3-pyqt6
+Requires:   python3-pyyaml
 Requires:   lm_sensors
 Requires:   polkit
 

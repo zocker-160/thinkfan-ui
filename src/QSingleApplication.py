@@ -1,4 +1,8 @@
-# MODIFIED
+# This file provides the QSingleApplicationTCP class, which ensures that only
+# one instance of the application can be running at a time. If a second
+# instance is launched, it signals the first instance to activate its window
+# and then exits.
+
 from PyQt6.QtCore import QTextStream, pyqtSignal
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtNetwork import (

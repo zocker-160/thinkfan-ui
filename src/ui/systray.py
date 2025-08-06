@@ -1,3 +1,7 @@
+# This file implements the application's system tray icon and its context menu.
+# It allows the application to run in the background and provides quick access
+# to fan controls and sensor data.
+
 from PyQt6.QtGui import QIcon, QAction
 from PyQt6.QtCore import QObject
 from PyQt6.QtWidgets import QSystemTrayIcon, QMenu
@@ -14,10 +18,12 @@ class QApp_SysTrayIndicator(QObject):
         self.icon.activated.connect(self.mainWindow.toggleAppear)
 
         self.menu = QMenu()
-        # This is the key change: update the menu right before it is shown.
+        # This is a key feature: connect the menu's `aboutToShow` signal.
+        # This ensures the sensor data is fresh every time the user opens the menu.
         self.menu.aboutToShow.connect(self.updateIndicatorMenu)
 
-        self.buildIndicatorMenu() # Build the static parts of the menu once.
+        # Build the static parts of the menu once on startup.
+        self.buildIndicatorMenu()
 
         self.icon.setContextMenu(self.menu)
         self.icon.show()
@@ -32,9 +38,7 @@ class QApp_SysTrayIndicator(QObject):
             label = f"Level {level}" if i > 0 else "Off (Level 0)"
             self.fanSpeedMenu.addAction(label, lambda l=level: self.setFanSpeed(l))
 
-        # This section will be dynamically populated by updateIndicatorMenu
         self.menu.addSection("Sensor Values")
-        # Add a single separator that we will insert actions before
         self.sensor_separator = self.menu.addSeparator()
 
         self.menu.addSection("Controls")
@@ -45,29 +49,39 @@ class QApp_SysTrayIndicator(QObject):
         self.menu.addAction("Exit", self.app.quit)
 
     def updateIndicatorMenu(self):
-        """Clears old sensor data and populates the menu with fresh data."""
-        # --- Clear old dynamic entries ---
+        """
+        Clears old sensor data and populates the menu with fresh data
+        using the unified data collection method.
+        """
         for action in self.dynamic_actions:
             self.menu.removeAction(action)
         self.dynamic_actions.clear()
 
-
-        # --- Populate with new data ---
-        temp_info = self.getTempInfo()
-        fan_info = self.getFanInfo()
-        all_info = {**temp_info, **fan_info}
+        all_data = self.get_all_sensor_data()
         
-        # Insert new sensor actions before the separator
-        if all_info:
-            for label, value in sorted(all_info.items()):
-                action_text = f"{label}: {value}"
+        display_info = {}
+        display_info.update(all_data.get('temps', {}))
+        display_info.update(all_data.get('fans', {}))
+        display_info.update(all_data.get('fan_state', {}))
+
+        if display_info and not display_info.get("Error"):
+            for label, value in sorted(display_info.items()):
+                # Add units for display
+                if label in all_data.get('temps', {}):
+                    action_text = f"{label}: {value}°C"
+                elif label in all_data.get('fans', {}):
+                    # --- FIX --- Cast fan speed value to int to remove decimal
+                    action_text = f"{label}: {int(value)} RPM"
+                else:
+                    action_text = f"{label}: {value}"
+
                 new_action = QAction(action_text, self)
                 new_action.triggered.connect(self.mainWindow.appear)
                 self.menu.insertAction(self.sensor_separator, new_action)
-                self.dynamic_actions.append(new_action) # Keep track of the new action
+                self.dynamic_actions.append(new_action)
         else:
-            # Show a placeholder if no data is available
-            no_data_action = QAction("No sensor data", self)
+            error_msg = display_info.get("Error", "No sensor data")
+            no_data_action = QAction(error_msg, self)
             no_data_action.setEnabled(False)
             self.menu.insertAction(self.sensor_separator, no_data_action)
             self.dynamic_actions.append(no_data_action)
