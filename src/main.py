@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Application entry point and main window logic controller. It initializes
+# QApplication, enforces a single-instance lock, loads the UI definition
+# from `main.ui`, and connects UI element signals to the backend slots.
 
 import os
 import sys
@@ -72,6 +75,7 @@ class ThinkFanUI(QApp_SysTrayIndicator):
 
         self.updateTimer = QTimer(self)
         self.updateTimer.timeout.connect(self.updateUI)
+        self.updateTimer.timeout.connect(self.updateIndicatorMenu)
         self.updateTimer.start(1000)
         self.updateTimer.timeout.emit()
 
@@ -100,7 +104,7 @@ class ThinkFanUI(QApp_SysTrayIndicator):
         necessary temperature, fan, and status data in a structured format.
         """
         all_data = {'temps': {}, 'fans': {}, 'fan_state': {}}
-        allowed_temp_keywords = ["cpu", "gpu", "package id 0"]
+        allowed_temp_keywords = ["cpu", "gpu"]
 
         # 1. Get structured data from `sensors -j`
         try:

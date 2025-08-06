@@ -1,4 +1,6 @@
-# This file will contain the implementation of the fan curve editor widget.
+# This file defines the interactive graphical components for the fan curve
+# editor, including the draggable points, the graph scene, and the view
+# that contains them.
 
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QGraphicsItem, QGraphicsTextItem, QGraphicsLineItem
 from PyQt6.QtGui import QBrush, QPen, QPainter, QColor, QTransform, QFont

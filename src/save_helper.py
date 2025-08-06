@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-import sys
-import os
 
 # This script is intended to be run with pkexec to get root privileges.
 # It takes the full path to the config file as the first argument
 # and the YAML content to write as the second argument.
+# Its sole purpose is to safely write content
+# to a protected file, specifically /etc/thinkfan.conf.
+
+import sys
+import os
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

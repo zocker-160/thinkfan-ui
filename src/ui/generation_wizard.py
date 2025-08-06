@@ -1,3 +1,7 @@
+# This file defines the GenerationWizard class, a dialog that allows users to
+# select which of their system's sensors should be included in a new
+# thinkfan.conf file.
+
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QDialogButtonBox,
     QLabel, QScrollArea, QCheckBox, QWidget

@@ -1,5 +1,9 @@
 # src/ui/config_preview_dialog.py
 
+# This file defines the ConfigPreviewDialog class, a simple QDialog used to
+# show the user a preview of the thinkfan.conf content that is about to be
+# saved.
+
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QTextEdit, QDialogButtonBox
 )

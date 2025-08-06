@@ -1,3 +1,7 @@
+# This file defines the TempRangeEditor class, which is a compound widget
+# used in the right-hand pane of the curve editor to edit the properties of
+# a single temperature range (fan level).
+
 from PyQt6.QtWidgets import (
     QWidget,
     QGridLayout,

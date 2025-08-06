@@ -1,5 +1,9 @@
 # src/data_model.py
 
+# This file defines the core data structures for the application.
+# It uses the Qt signals/slots mechanism to ensure that when data is changed
+# here, the UI is automatically notified and updated.
+
 from PyQt6.QtCore import QObject, pyqtSignal
 
 class TempRange(QObject):

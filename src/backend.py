@@ -1,3 +1,7 @@
+# System interaction layer. Reads sensor data from the 'sensors' command,
+# controls fan speed via /proc/acpi/ibm/fan, and handles all I/O
+# operations for thinkfan.conf files.
+
 import yaml
 import subprocess
 import os

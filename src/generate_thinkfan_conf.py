@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+# A standalone command-line script to bootstrap a default, safe,
+# and well-commented thinkfan.conf file. Its primary purpose is to give users
+# a working starting point for their configuration, which they can then
+# customize further, either manually or with the UI.
+
 import subprocess
 import json
 import os

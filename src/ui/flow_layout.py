@@ -1,3 +1,10 @@
+# src/ui/flow_layout.py
+
+# This file provides a custom FlowLayout class.
+# A standard QBoxLayout only arranges widgets in a single row or column.
+# This layout arranges items horizontally and wraps them to the next line
+# when the available width is exceeded, similar to text flow in a document.
+
 from PyQt6.QtWidgets import QLayout, QStyle
 from PyQt6.QtCore import Qt, QPoint, QRect, QSize
 

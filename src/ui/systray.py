@@ -1,3 +1,7 @@
+# This file implements the application's system tray icon and its context menu.
+# It allows the application to run in the background and provides quick access
+# to fan controls and sensor data.
+
 from PyQt6.QtGui import QIcon, QAction
 from PyQt6.QtCore import QObject
 from PyQt6.QtWidgets import QSystemTrayIcon, QMenu
@@ -14,8 +18,11 @@ class QApp_SysTrayIndicator(QObject):
         self.icon.activated.connect(self.mainWindow.toggleAppear)
 
         self.menu = QMenu()
+        # This is a key feature: connect the menu's `aboutToShow` signal.
+        # This ensures the sensor data is fresh every time the user opens the menu.
         self.menu.aboutToShow.connect(self.updateIndicatorMenu)
 
+        # Build the static parts of the menu once on startup.
         self.buildIndicatorMenu()
 
         self.icon.setContextMenu(self.menu)
