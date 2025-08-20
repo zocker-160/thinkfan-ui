@@ -288,14 +288,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # --- MODIFIED: New fan mode handlers ---
     def _set_fan_mode_auto(self):
         self.app.setFanSpeed("auto")
-        self.slider.setEnabled(False)
 
     def _set_fan_mode_full(self):
         self.app.setFanSpeed("full-speed")
-        self.slider.setEnabled(False)
 
     def _set_fan_mode_manual(self):
-        self.slider.setEnabled(True)
         self.app.setFanSpeed(self.slider.value())
 
     def _slider_value_changed(self, value):
