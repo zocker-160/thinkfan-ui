@@ -2,7 +2,7 @@
 # This file is used by rpmbuild to create the RPM package.
 
 Name:       thinkfan-ui
-Version:    1.0.0
+Version:    1.0.2
 Release:    1%{?dist}
 Summary:    A GUI for controlling fan speed on ThinkPads
 
