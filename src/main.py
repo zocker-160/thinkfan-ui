@@ -1,49 +1,50 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
+# Application entry point and main window logic controller. It initializes
+# QApplication, enforces a single-instance lock, loads the UI definition
+# from `main.ui`, and connects UI element signals to the backend slots.
 
 import os
 import sys
 import subprocess
 import re
+import json
 
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QPalette
 from PyQt6.QtWidgets import (
-    QMainWindow,
-    QMessageBox,
-    QWidget,
-    QLabel,
-    QHBoxLayout,
-    QSpacerItem,
-    QSizePolicy,
-    QButtonGroup
+    QMainWindow, QMessageBox, QWidget, QLabel, QHBoxLayout,
+    QSpacerItem, QSizePolicy, QButtonGroup, QVBoxLayout, QSplitter
 )
 
 from ui.gui import Ui_MainWindow
 from ui.systray import QApp_SysTrayIndicator
+from ui.curve_editor import FanCurveEditor
+from ui.range_controls import RangeControls
+from ui.generation_wizard import GenerationWizard
+from ui.config_preview_dialog import ConfigPreviewDialog
+from data_model import FanCurveModel
+import backend
 from QSingleApplication import QSingleApplicationTCP
 
 APP_NAME = "ThinkFan UI"
 APP_VERSION = "1.0.2"
 APP_DESKTOP_NAME = "thinkfan-ui"
 APP_UUID = "587dedfb-19f2-4b2a-bc74-3d656e80966a"
-
 GITHUB_URL = "https://github.com/zocker-160/thinkfan-ui"
-
 PROC_FAN = "/proc/acpi/ibm/fan"
 
-# --- Tooltips for sensors ---
 SENSOR_TOOLTIPS = {
-    "Tctl": "Control Temperature: Used by the CPU to manage cooling.",
-    "Tdie": "Die Temperature: The actual measured temperature of the CPU die.",
-    "Composite": "SSD Composite Temperature: Main temperature reading for the NVMe drive.",
-    # Generic catch-all for motherboard sensors
-    "temp": "Motherboard Sensor: A generic sensor for the chipset, VRMs, or case.",
-    "fan": "Fan Speed in Revolutions Per Minute (RPM).",
-    "level": "Current power level setting for the fan (0-7)."
+    "cpu": "CPU Temperature: The temperature of the main processor.",
+    "gpu": "GPU Temperature: The temperature of the graphics processor.",
+    "fan1": "Fan Speed in Revolutions Per Minute (RPM).",
+    "fan2": "Fan Speed for the secondary fan, if present.",
+    "level": "The current fan speed level set in the embedded controller (EC).",
+    "status": "Indicates if fan control is enabled or disabled by the EC.",
+    "composite": "SSD Composite Temperature: Main temperature reading for the NVMe drive.",
+    "package id 0": "The overall temperature of the CPU package."
 }
 
 class ThinkFanUI(QApp_SysTrayIndicator):
-
     def __init__(self, app: QSingleApplicationTCP, argv):
         super().__init__()
 
@@ -53,7 +54,9 @@ class ThinkFanUI(QApp_SysTrayIndicator):
         self.app.setApplicationDisplayName(APP_NAME)
         self.app.setDesktopFileName(APP_DESKTOP_NAME)
 
-        self.mainWindow = MainWindow(self)
+        self.fan_curve_model = FanCurveModel(self)
+
+        self.mainWindow = MainWindow(self, self.fan_curve_model)
         self.mainWindow.center()
         self.mainWindow._set_fan_mode_auto()
         self.app.onActivate.connect(self.mainWindow.appear)
@@ -72,36 +75,87 @@ class ThinkFanUI(QApp_SysTrayIndicator):
 
         self.updateTimer = QTimer(self)
         self.updateTimer.timeout.connect(self.updateUI)
+        self.updateTimer.timeout.connect(self.updateIndicatorMenu)
         self.updateTimer.start(1000)
         self.updateTimer.timeout.emit()
 
     def updateUI(self):
-        # This function now ONLY updates the main window, not the tray.
+        """ Calls a single data source and updates all UI grids. """
         if self.mainWindow.isVisible():
-            # Clear previous sensor readings
-            self._clear_layout(self.mainWindow.tempGridLayout)
-            self._clear_layout(self.mainWindow.fanGridLayout)
+            all_data = self.get_all_sensor_data()
 
-            # Get and display new data
-            temp_data = self.getTempInfo()
+            # Prepare formatted data for display
+            temp_data = {label: f"{value}°C" for label, value in all_data.get('temps', {}).items()}
+            # --- FIX --- Cast fan speed value to int to remove decimal
+            fan_data = {label: f"{int(value)} RPM" for label, value in all_data.get('fans', {}).items()}
+            fan_data.update(all_data.get('fan_state', {}))
+            
+            # Populate temperature grid
+            self._clear_layout(self.mainWindow.tempGridLayout)
             self._populate_grid(self.mainWindow.tempGridLayout, temp_data)
 
-            fan_data = self.getFanInfo()
-            self._populate_grid(self.mainWindow.fanGridLayout, fan_data, is_fan_info=True)
+            # Populate fan grid
+            self._clear_layout(self.mainWindow.fanGridLayout)
+            self._populate_grid(self.mainWindow.fanGridLayout, fan_data)
 
+    def get_all_sensor_data(self):
+        """
+        Calls 'sensors -j' once and reads /proc/acpi/ibm/fan to get all
+        necessary temperature, fan, and status data in a structured format.
+        """
+        all_data = {'temps': {}, 'fans': {}, 'fan_state': {}}
+        allowed_temp_keywords = ["cpu", "gpu"]
+
+        # 1. Get structured data from `sensors -j`
+        try:
+            result = subprocess.run(
+                ["sensors", "-j"], 
+                capture_output=True, text=True, check=True, timeout=2
+            )
+            sensor_data = json.loads(result.stdout)
+
+            for device_info in sensor_data.values():
+                for feature_name, feature_data in device_info.items():
+                    if not isinstance(feature_data, dict): continue
+
+                    # Extract temperatures
+                    temp_input = next((v for k, v in feature_data.items() if k.endswith("_input") and k.startswith("temp")), None)
+                    if temp_input is not None and any(keyword in feature_name.lower() for keyword in allowed_temp_keywords):
+                        all_data['temps'][feature_name.strip()] = temp_input
+
+                    # Extract fan speeds
+                    fan_input = next((v for k, v in feature_data.items() if k.endswith("_input") and k.startswith("fan")), None)
+                    if fan_input is not None:
+                        fan_label = feature_name.strip()
+                        if fan_label.lower() == "fan1": fan_label = "Fan1"
+                        if fan_label.lower() == "fan2": fan_label = "Fan2"
+                        all_data['fans'][fan_label] = fan_input
+        
+        except Exception as e:
+            all_data['temps']["Error"] = f"'sensors -j' command failed."
+
+        # 2. Get Fan1 level/status from /proc, which is not in `sensors` output
+        try:
+            with open(PROC_FAN, "r") as f:
+                for line in f:
+                    if ":" in line:
+                        key, value = [x.strip() for x in line.split(":", 1)]
+                        if key in ["status", "level"]:
+                            all_data['fan_state'][key] = value
+        except Exception as e:
+            if not all_data['temps'].get("Error"):
+                 all_data['temps']["Error"] = str(e)
+
+        return all_data
 
     def _clear_layout(self, layout):
-        """Removes all widgets from a layout."""
         while layout.count():
             child = layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
 
-    def _populate_grid(self, grid_layout, data, is_fan_info=False):
-        """Populates a QGridLayout with sorted sensor data."""
+    def _populate_grid(self, grid_layout, data):
         row = 0
-        
-        # Get theme colors from the application's palette
         palette = self.app.palette()
         base_color = palette.color(QPalette.ColorRole.Base).name()
         alternate_color = palette.color(QPalette.ColorRole.AlternateBase).name()
@@ -109,125 +163,43 @@ class ThinkFanUI(QApp_SysTrayIndicator):
         for label_text, value_text in sorted(data.items()):
             label = QLabel(f"{label_text}:")
             value = QLabel(str(value_text))
-
-            # --- Add Tooltips and Highlighting ---
-            tooltip_key = label_text.lower()
-            tooltip_text = "No additional information available."
-            if "temp" in tooltip_key:
-                tooltip_text = SENSOR_TOOLTIPS.get("temp")
-            elif tooltip_key in SENSOR_TOOLTIPS:
-                 tooltip_text = SENSOR_TOOLTIPS.get(tooltip_key)
-            elif is_fan_info and 'speed' in tooltip_key:
-                 tooltip_text = SENSOR_TOOLTIPS.get("fan")
-
-            # Highlight the Fan1 row
-            if label_text == "Fan1":
-                highlight_style = "font-weight: bold; color: #87CEEB;" # Light blue color
-                label.setStyleSheet(highlight_style)
-                value.setStyleSheet(highlight_style)
-                tooltip_text = "This is the primary fan controlled by this application."
+            
+            tooltip_key = label_text.lower().replace(":", "")
+            tooltip_text = SENSOR_TOOLTIPS.get(tooltip_key, "No additional information available.")
+            
+            if "fan1" in tooltip_key: tooltip_text = SENSOR_TOOLTIPS.get("fan1")
+            if "fan2" in tooltip_key: tooltip_text = SENSOR_TOOLTIPS.get("fan2")
+            if "level" in tooltip_key: tooltip_text = SENSOR_TOOLTIPS.get("level")
+            if "status" in tooltip_key: tooltip_text = SENSOR_TOOLTIPS.get("status")
 
             label.setToolTip(tooltip_text)
             value.setToolTip(tooltip_text)
-
-            # --- Create a container for EVERY row to ensure consistent alignment ---
+            
+            if "Fan1" in label_text:
+                highlight_style = "font-weight: bold; color: #87CEEB;"
+                label.setStyleSheet(highlight_style)
+                value.setStyleSheet(highlight_style)
+                label.setToolTip("This is the primary fan controlled by this application.")
+                value.setToolTip("This is the primary fan controlled by this application.")
+            
             row_container = QWidget()
             row_layout = QHBoxLayout(row_container)
-            row_layout.setContentsMargins(5, 2, 5, 2) # Consistent padding for all rows
+            row_layout.setContentsMargins(5, 2, 5, 2)
             row_layout.addWidget(label)
-            # Add a spacer to push the value to the right
             spacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
             row_layout.addItem(spacer)
             row_layout.addWidget(value)
             
-            # --- Apply Alternating Row Colors using System Palette ---
-            if row % 2 == 1: # Apply to odd rows (0-indexed)
+            if row % 2 == 1:
                 row_style = f"background-color: {alternate_color}; border-radius: 4px;"
-            else: # Apply to even rows
+            else:
                 row_style = f"background-color: {base_color}; border-radius: 4px;"
-            
             row_container.setStyleSheet(row_style)
-
-            # Add the container to the main grid, spanning both columns
+            
             grid_layout.addWidget(row_container, row, 0, 1, 2)
-
             row += 1
 
-
-    def getTempInfo(self):
-        """Reads and parses CPU and GPU temperatures from the 'sensors' command."""
-        temps = {}
-        # Filter for only CPU and GPU temperatures
-        allowed_keywords = ["cpu", "gpu"]
-        try:
-            proc = subprocess.Popen(["sensors", "thinkpad-isa-0000"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            sOut, sErr = proc.communicate(timeout=2)
-
-            if not sErr:
-                lines = sOut.decode().strip().split("\n")
-                tempRE = re.compile(r"^(.*?):\s*\+?([^ ]+°C)")
-
-                for line in lines:
-                    match = tempRE.match(line)
-                    if match:
-                        label, value = match.groups()
-                        if any(keyword in label.lower() for keyword in allowed_keywords):
-                            clean_label = label.strip()
-                            if clean_label not in temps:
-                                temps[clean_label] = value.strip()
-            else:
-                temps["Error"] = sErr.decode()
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-             temps["Error"] = "'sensors' command failed."
-        except Exception as e:
-            temps["Error"] = str(e)
-
-
-        return temps
-
-    def getFanInfo(self):
-        """Gathers all fan-related information."""
-        fan_data = {}
-        
-        # 1. Get status and level from /proc/acpi/ibm/fan
-        try:
-            with open(PROC_FAN, "r") as f:
-                for line in f:
-                    if ":" in line:
-                        key, value = line.split(":", 1)
-                        key = key.strip()
-                        if key in ["status", "level"]:
-                            fan_data[key] = value.strip()
-                        # MODIFIED: Rename 'speed' to 'Fan1' and format it
-                        elif key == "speed":
-                            fan_data["Fan1"] = f"{value.strip()} RPM"
-
-        except FileNotFoundError:
-            fan_data["Error"] = f"{PROC_FAN} not found."
-        except Exception as e:
-            fan_data["Error"] = str(e)
-
-        # 2. Get fan2 (and others) from 'sensors' command
-        try:
-            proc = subprocess.Popen(["sensors", "thinkpad-isa-0000"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            sOut, sErr = proc.communicate(timeout=2)
-            if not sErr:
-                lines = sOut.decode().strip().split("\n")
-                fanRE = re.compile(r"^(fan2.*?):\s*(\d+\s*RPM)")
-                for line in lines:
-                    match = fanRE.match(line)
-                    if match:
-                        label, value = match.groups()
-                        fan_data[label.strip()] = value.strip()
-
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            # This is not a critical error, so we can ignore it.
-            pass
-        
-        return fan_data
-
     def setFanSpeed(self, speed="auto", retry=False):
-        """Sets the fan speed by writing to /proc/acpi/ibm/fan."""
         print("set speed:", speed)
         try:
             with open(PROC_FAN, "w") as soc:
@@ -242,50 +214,118 @@ class ThinkFanUI(QApp_SysTrayIndicator):
             self.mainWindow.showErrorMSG(f"{PROC_FAN} does not exist!")
         except OSError:
             self.mainWindow.showErrorMSG(
-                f"\"thinkpad_acpi\" does not seem to be set up correctly!",
+                "\"thinkpad_acpi\" does not seem to be set up correctly!",
                 detail="Please check that /etc/modprobe.d/thinkpad_acpi.conf contains \"options thinkpad_acpi fan_control=1\"")
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
-    def __init__(self, app: ThinkFanUI):
+    def __init__(self, app: ThinkFanUI, model: FanCurveModel):
         super(QMainWindow, self).__init__()
         self.app = app
+        self.model = model
         self.setupUi(self)
+        
+        self.curve_editor = FanCurveEditor(self.model, self)
+        self.controls_pane = RangeControls(self.model, self)
+        self.controls_pane.setMinimumWidth(300)
+        splitter = QSplitter(self)
+        splitter.addWidget(self.curve_editor)
+        splitter.addWidget(self.controls_pane)
+        splitter.setSizes([700, 300])
+        self.curveEditorLayout = QVBoxLayout(self.tabCurveEditor)
+        self.curveEditorLayout.addWidget(splitter)
+        
         self.versionLabel.setText(f"v{APP_VERSION}")
 
-        # --- MODIFIED: Setup mutually exclusive fan control buttons ---
-        # 1. Make all buttons checkable
+        self.controls_pane.load_button.clicked.connect(self.load_curve)
+        self.controls_pane.save_button.clicked.connect(self.save_curve)
+        self.controls_pane.generate_button.clicked.connect(self.show_generation_wizard)
+
         self.button_auto.setCheckable(True)
         self.button_full.setCheckable(True)
         self.button_set.setCheckable(True)
-        self.button_set.setText("Manual") # Rename for clarity
+        self.button_set.setText("Manual")
 
-        # 2. Group them together
         self.fanModeGroup = QButtonGroup(self)
         self.fanModeGroup.addButton(self.button_auto)
         self.fanModeGroup.addButton(self.button_full)
         self.fanModeGroup.addButton(self.button_set)
         self.fanModeGroup.setExclusive(True)
 
-        # 3. Connect signals to handlers
         self.button_auto.clicked.connect(self._set_fan_mode_auto)
         self.button_full.clicked.connect(self._set_fan_mode_full)
         self.button_set.clicked.connect(self._set_fan_mode_manual)
         
-        # 4. Link slider to manual mode
         self.slider.valueChanged.connect(self._slider_value_changed)
-
-        # 5. Set initial state
         self.button_auto.setChecked(True)
 
-        # Menu actions
         self.actionClose.triggered.connect(self.close)
         self.actionExit.triggered.connect(self.app.app.quit)
         self.actionGitHub.triggered.connect(openGitHub)
         self.actionAbout.triggered.connect(self.showAbout)
         self.actionAbout_Qt.triggered.connect(lambda: QMessageBox.aboutQt(self))
+        
+        self.resize(self.sizeHint())
+        
+        self._curve_editor_first_load = True
+        self.tabWidget.currentChanged.connect(self.on_tab_changed)
 
-    # --- MODIFIED: New fan mode handlers ---
+        self.button_auto.setToolTip("Set fan to automatic control by the Embedded Controller (EC).")
+        self.button_full.setToolTip("Set fan to its maximum speed.")
+        self.button_set.setToolTip("Enable slider for manual fan level control (0-7).")
+
+    def on_tab_changed(self, index):
+        if self.tabWidget.widget(index) is self.tabCurveEditor:
+            if self._curve_editor_first_load:
+                self._curve_editor_first_load = False
+                if not os.path.exists(backend.THINKFAN_CONF_PATH):
+                    reply = QMessageBox.question(self, "thinkfan-ui", 
+                                                 "No thinkfan configuration found.\nWould you like to generate one now?",
+                                                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                                 QMessageBox.StandardButton.No)
+                    if reply == QMessageBox.StandardButton.Yes:
+                        self.show_generation_wizard()
+
+    def show_generation_wizard(self):
+        all_sensors = backend.discover_sensors()
+        if not all_sensors:
+            QMessageBox.critical(self, "Error", "Could not find any temperature sensors. Please ensure 'lm-sensors' is installed.")
+            return
+
+        wizard = GenerationWizard(all_sensors, self)
+        if wizard.exec():
+            selection = wizard.get_selection()
+            if selection:
+                config_content = backend.generate_config_content(selection)
+                preview_dialog = ConfigPreviewDialog(config_content, self)
+                if preview_dialog.exec():
+                    success = backend.save_content_to_thinkfan(config_content)
+                    if success:
+                        QMessageBox.information(self, "Success",
+                                                "thinkfan.conf has been generated and saved.\n"
+                                                "Loading the new curve now.")
+                        self.load_curve()
+                    else:
+                        QMessageBox.critical(self, "Error",
+                                             "Failed to save the new thinkfan.conf. "
+                                             "Check logs for details.")
+
+    def load_curve(self):
+        print("Loading curve from thinkfan.conf...")
+        new_curves = backend.load_curve_from_thinkfan()
+        if new_curves:
+            self.model.set_curves(new_curves)
+            QMessageBox.information(self, "Success", "Successfully loaded curves from /etc/thinkfan.conf")
+        else:
+            QMessageBox.warning(self, "Warning", "Could not load curves from /etc/thinkfan.conf. Check logs for details.")
+
+    def save_curve(self):
+        print("Saving curve to thinkfan.conf...")
+        if backend.save_curve_to_thinkfan(self.model.get_all_curves()):
+            QMessageBox.information(self, "Success", "Successfully saved curve to /etc/thinkfan.conf.\nRestart thinkfan service to apply changes.")
+        else:
+            QMessageBox.critical(self, "Error", "Failed to save to /etc/thinkfan.conf. Run the app with sudo or check file permissions.")
+
     def _set_fan_mode_auto(self):
         self.app.setFanSpeed("auto")
 
@@ -296,7 +336,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.app.setFanSpeed(self.slider.value())
 
     def _slider_value_changed(self, value):
-        # Moving the slider automatically activates manual mode
         self.button_set.setChecked(True)
         self._set_fan_mode_manual()
 
@@ -344,21 +383,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
-
-# --- Helper Functions ---
-
 def updatePermissions():
     try:
         command = ["pkexec", "chown", os.getlogin(), PROC_FAN]
-        result = subprocess.run(command)
+        subprocess.run(command)
     except OSError:
         command = ["pkexec", "chmod", "777", PROC_FAN]
-        result = subprocess.run(command)
-    print(f"Permission update exited with code: {result.returncode}")
+        subprocess.run(command)
 
 def checkPermissions() -> bool:
     if not os.path.isfile(PROC_FAN):
-        # we cannot change permissions of a file that does not exist
         return True
     return os.access(PROC_FAN, os.W_OK)
 
