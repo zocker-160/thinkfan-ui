@@ -21,7 +21,7 @@ It is written for **Linux only**. For Windows, see [speedfan](http://www.almico.
 
 ## Dependencies
 
-### Debian / Ubuntu
+### Ubuntu LTS
 `sudo apt install lm-sensors policykit-1 python3 python3-pyqt6`
 
 ### Fedora
@@ -33,7 +33,7 @@ It is written for **Linux only**. For Windows, see [speedfan](http://www.almico.
 
 AUR: [thinkfan-ui](https://aur.archlinux.org/packages/thinkfan-ui/)
 
-### Debian / Ubuntu
+### Ubuntu LTS
 
 - Download `.deb` from [release page](https://github.com/zocker-160/thinkfan-ui/releases)
 - Install using package manager of your choice or in terminal with `apt install ./<packagename>.deb`
